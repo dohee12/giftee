@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       {children}
     </SidebarProvider>

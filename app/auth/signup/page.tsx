@@ -94,7 +94,7 @@ export default function SignupPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center space-x-2 mb-4">
             <Gift className="h-10 w-10 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">기프티콘 모음북</span>
+            <span className="text-2xl font-bold text-gray-900">Giftee</span>
           </Link>
           <p className="text-gray-600">새 계정을 만들어보세요</p>
         </div>

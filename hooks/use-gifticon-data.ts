@@ -34,7 +34,6 @@ export function useGifticons() {
           name: "아메리카노 Tall",
           brand: "스타벅스",
           category: "cafe",
-          giftType: "exchange",
           expiryDate: "2024-12-31",
           isUsed: false,
           imageUrl: "/placeholder.svg?height=200&width=300",
@@ -48,7 +47,6 @@ export function useGifticons() {
           name: "아메리카노 Regular",
           brand: "스타벅스",
           category: "cafe",
-          giftType: "exchange",
           expiryDate: "2024-02-28",
           isUsed: false,
           imageUrl: "/placeholder.svg?height=200&width=300",
@@ -61,7 +59,6 @@ export function useGifticons() {
           name: "아이스 아메리카노",
           brand: "메가커피",
           category: "cafe",
-          giftType: "exchange",
           expiryDate: "2024-03-15",
           isUsed: false,
           imageUrl: "/placeholder.svg?height=200&width=300",
@@ -74,7 +71,6 @@ export function useGifticons() {
           name: "치킨버거 세트",
           brand: "맥도날드",
           category: "food",
-          giftType: "exchange",
           expiryDate: "2024-01-25",
           isUsed: false,
           imageUrl: "/placeholder.svg?height=200&width=300",
@@ -87,7 +83,6 @@ export function useGifticons() {
           name: "상품권 5000원",
           brand: "CU",
           category: "convenience",
-          giftType: "amount",
           expiryDate: "2024-06-30",
           isUsed: true,
           imageUrl: "/placeholder.svg?height=200&width=300",
@@ -105,28 +100,10 @@ export function useGifticons() {
 
   // localStorage에 데이터 저장
   const saveToStorage = useCallback((data: Gifticon[]) => {
-    console.log("=== saveToStorage 시작 ===")
-    console.log("저장할 데이터:", data)
-    console.log("데이터 길이:", data.length)
-    
     if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-        console.log("localStorage 저장 성공")
-        
-        // 저장된 데이터 확인
-        const savedData = localStorage.getItem(STORAGE_KEY)
-        const parsedData = savedData ? JSON.parse(savedData) : null
-        console.log("저장 후 확인:", parsedData)
-        console.log("저장된 데이터 길이:", parsedData ? parsedData.length : 0)
-      } catch (error) {
-        console.error("localStorage 저장 오류:", error)
-      }
-    } else {
-      console.log("window 객체가 없음 (SSR)")
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      console.log("localStorage에 데이터 저장:", data)
     }
-    
-    console.log("=== saveToStorage 완료 ===")
   }, [])
 
   // 유효기간 알림 체크 로직
@@ -137,41 +114,26 @@ export function useGifticons() {
 
   const addGifticon = useCallback(
     (newGifticon: Omit<Gifticon, "id" | "registeredAt">) => {
-      console.log("=== addGifticon 시작 ===")
-      console.log("새 기프티콘 데이터:", newGifticon)
-      
       const gifticon: Gifticon = {
         ...newGifticon,
         id: Date.now().toString(),
         registeredAt: new Date().toISOString().split("T")[0],
       }
-      
-      console.log("생성된 기프티콘:", gifticon)
-      
       setGifticons((prev) => {
-        console.log("이전 기프티콘 목록:", prev)
         const updated = [...prev, gifticon]
-        console.log("업데이트된 기프티콘 목록:", updated)
-        
-        // 즉시 localStorage에 저장
+        console.log("기프티콘 추가 후:", updated)
         saveToStorage(updated)
-        
-        // 강제로 리렌더링을 위해 새로운 배열 반환
-        return [...updated]
+        return updated
       })
-      
-      console.log("=== addGifticon 완료 ===")
     },
     [saveToStorage],
   )
 
   const updateGifticon = useCallback(
-    (updatedGifticon: Gifticon) => {
+    (id: string, updates: Partial<Gifticon>) => {
       setGifticons((prev) => {
-        const updated = prev.map((g) => 
-          g.id === updatedGifticon.id ? updatedGifticon : g
-        )
-        console.log("기프티콘 수정 후:", updated)
+        const updated = prev.map((g) => (g.id === id ? { ...g, ...updates } : g))
+        console.log("기프티콘 업데이트 후:", updated)
         saveToStorage(updated)
         return updated
       })
@@ -247,39 +209,6 @@ export function useGifticons() {
 
   const brandsByCategory = getBrandsByCategory(gifticons)
 
-  const getUnusedGifticons = useCallback(() => {
-    return gifticons.filter((g) => !g.isUsed)
-  }, [gifticons])
-
-  const getGifticonsByCriteria = useCallback(
-    (criteria: {
-      categories?: string[]
-      brands?: string[]
-      keywords?: string[]
-      unusedOnly?: boolean
-    }) => {
-      return gifticons.filter((g) => {
-        if (criteria.unusedOnly && g.isUsed) return false
-
-        if (criteria.categories && !criteria.categories.includes(g.category)) return false
-
-        if (criteria.brands && !criteria.brands.includes(g.brand)) return false
-
-        if (criteria.keywords) {
-          const hasKeyword = criteria.keywords.some(
-            (keyword) =>
-              g.name.toLowerCase().includes(keyword.toLowerCase()) ||
-              g.brand.toLowerCase().includes(keyword.toLowerCase()),
-          )
-          if (!hasKeyword) return false
-        }
-
-        return true
-      })
-    },
-    [gifticons],
-  )
-
   // 현재 상태를 주기적으로 로그
   useEffect(() => {
     console.log("현재 기프티콘 상태:", gifticons)
@@ -299,7 +228,5 @@ export function useGifticons() {
     toggleUsed,
     getGifticonsByBrand,
     getGifticonsByCategory,
-    getUnusedGifticons,
-    getGifticonsByCriteria,
   }
 }
