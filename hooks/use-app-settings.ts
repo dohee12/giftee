@@ -6,6 +6,7 @@ export type ListView = "list" | "card"
 export type SortBy = "brand" | "expiryDate" | "registeredAt"
 export type SortOrder = "asc" | "desc"
 
+// AppSettings 인터페이스에 expiryNotificationDays 추가
 interface AppSettings {
   listView: ListView
   sortBy: SortBy
@@ -14,12 +15,10 @@ interface AppSettings {
   expiryNotification: boolean
   autoCouponRecognition: boolean
   autoImageInput: boolean
-  expiryNotificationDays: number
-  aiRecommendations: boolean
-  aiRecommendationFrequency: "realtime" | "hourly" | "daily"
-  showRecommendationBadges: boolean
+  expiryNotificationDays: number // 새로 추가
 }
 
+// DEFAULT_SETTINGS에 기본값 추가
 const DEFAULT_SETTINGS: AppSettings = {
   listView: "card",
   sortBy: "expiryDate",
@@ -28,10 +27,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   expiryNotification: true,
   autoCouponRecognition: false,
   autoImageInput: true,
-  expiryNotificationDays: 7,
-  aiRecommendations: true,
-  aiRecommendationFrequency: "hourly",
-  showRecommendationBadges: true,
+  expiryNotificationDays: 7, // 기본값 7일
 }
 
 export function useSettings() {
@@ -39,7 +35,7 @@ export function useSettings() {
     // 클라이언트 사이드에서 localStorage에서 설정 불러오기
     if (typeof window !== "undefined") {
       const savedSettings = localStorage.getItem("appSettings")
-      return savedSettings ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) } : DEFAULT_SETTINGS
+      return savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS
     }
     return DEFAULT_SETTINGS
   })

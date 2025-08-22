@@ -226,11 +226,7 @@ export function UsedGiftIconsView({ gifticons, onRestoreGifticon }: UsedGiftIcon
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredUsedGifticons.map((gifticon) => {
               const logo = brandLogos[gifticon.brand] || "🏪"
-              const categoryInfo = categories[gifticon.category] || {
-    label: gifticon.category || "기타",
-    color: "text-gray-600",
-    bgColor: "bg-gray-100"
-  }
+              const categoryInfo = categories[gifticon.category]
 
               return (
                 <Card key={gifticon.id} className="opacity-75 hover:opacity-100 transition-opacity">
@@ -262,7 +258,7 @@ export function UsedGiftIconsView({ gifticons, onRestoreGifticon }: UsedGiftIcon
                         <p className="text-base font-bold text-gray-600">{gifticon.price.toLocaleString()}원</p>
                       )}
                       <p className="text-xs text-gray-500">
-                        사용일: {gifticon.registeredAt ? format(parseISO(gifticon.registeredAt), "yyyy년 M월 d일", { locale: ko }) : "등록일 없음"}
+                        사용일: {format(parseISO(gifticon.registeredAt), "yyyy년 M월 d일", { locale: ko })}
                       </p>
                       {gifticon.memo && <p className="text-xs text-gray-500 italic line-clamp-2">{gifticon.memo}</p>}
                     </div>

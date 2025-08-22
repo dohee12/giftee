@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Gift, Home, ArrowLeft, Search } from "lucide-react"
+import { Gift, Home, ChevronLeft, Search } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -31,7 +31,7 @@ export default function NotFound() {
             </Link>
 
             <Button variant="outline" className="w-full bg-transparent" onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+                              <ChevronLeft className="h-4 w-4 mr-2" />
               이전 페이지로
             </Button>
 

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Gift, Camera, Bell, Share2, CheckCircle, ArrowRight, ArrowLeft, Sparkles } from "lucide-react"
+import { Gift, Camera, Bell, Share2, CheckCircle, ArrowRight, ChevronLeft, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function OnboardingPage() {
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
                     disabled={currentStep === 0}
                     className="bg-transparent"
                   >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    <ChevronLeft className="h-4 w-4 mr-2" />
                     이전
                   </Button>
 
