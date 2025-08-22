@@ -47,7 +47,7 @@ export function GifticonListItem({ gifticon, onToggleUsed, onView, onDelete }: G
           만료일: {format(parseISO(gifticon.expiryDate), "yyyy년 M월 d일", { locale: ko })}
         </p>
       </div>
-      <div className="flex flex-col items-end space-y-2 ml-4 flex-shrink-0">
+      <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
         <Button
           size="sm"
           variant={gifticon.isUsed ? "secondary" : "default"}
@@ -62,12 +62,12 @@ export function GifticonListItem({ gifticon, onToggleUsed, onView, onDelete }: G
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreVertical className="h-4 w-4" /> {/* 아이콘 크기 h-4 w-4로 변경 */}
+              <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onView(gifticon)}>
-              <Eye className="h-4 w-4 mr-2" /> {/* 아이콘 크기 h-4 w-4로 변경 */}
+              <Eye className="h-4 w-4 mr-2" />
               상세보기
             </DropdownMenuItem>
             {onDelete && (

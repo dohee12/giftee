@@ -2,11 +2,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
-import { Plus, Search, ChevronLeft, Bell, Gift, Grid, List, History, Settings } from "lucide-react"
+import { SidebarInset } from "@/components/ui/sidebar"
+import { Plus, Gift } from "lucide-react"
 import { useGifticons } from "@/hooks/use-gifticon-data"
 import { useSettings } from "@/hooks/use-app-settings"
 import { GifticonCard } from "@/components/gifticon-card"
@@ -19,17 +17,12 @@ import type { Gifticon } from "@/types/gifticon"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { GifticonFiltersDesktop } from "@/components/gifticon-filters-desktop"
 import { MobileFilters } from "@/components/mobile-filters"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
-import { useRouter } from "next/navigation"
 
-function AllGifticonsPageContent() {
-  const router = useRouter()
+function UnusedGifticonsPageContent() {
   const { gifticons, addGifticon, toggleUsed, deleteGifticon } = useGifticons()
   const { settings, updateSetting } = useSettings()
   const isMobile = useIsMobile()
-  const { toggleSidebar } = useSidebar()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all")
@@ -45,17 +38,18 @@ function AllGifticonsPageContent() {
     toggleUsed(id)
   }
 
+  // 미사용 기프티콘만 필터링 (만료 제외)
+  const unusedGifticons = gifticons.filter((g) => !g.isUsed && getDaysUntilExpiry(g.expiryDate) >= 0)
+
   const displayedGifticons = filterAndSortGifticons(
-    gifticons,
+    unusedGifticons,
     searchTerm,
     selectedCategoryFilter,
     settings.sortBy,
     settings.sortOrder,
-    showUsedFilter,
+    false, // 사용된 기프티콘은 표시하지 않음
     true,
   )
-
-  const activeGifticons = gifticons.filter((g) => getDaysUntilExpiry(g.expiryDate) >= 0)
 
   return (
     <SidebarInset>
@@ -96,33 +90,15 @@ function AllGifticonsPageContent() {
         {/* 기프티콘 목록 */}
         <div className="bg-white rounded-lg p-4 shadow-sm border">
           <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-3">
-              <h2 className="text-xl font-bold text-gray-900">전체 기프티콘</h2>
-              <div className="flex space-x-2">
-                <Badge variant="secondary">전체 {activeGifticons.length}개</Badge>
-                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                  사용가능 {activeGifticons.filter(g => !g.isUsed).length}개
-                </Badge>
-              </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">미사용 기프티콘</h2>
+              <p className="text-gray-600">{displayedGifticons.length}개의 기프티콘</p>
             </div>
-            {/* 우측 보기 전환 버튼 */}
-            <div className="flex border rounded-md">
-              <Button
-                variant={settings.listView === "card" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => updateSetting("listView", "card")}
-                className="rounded-r-none"
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={settings.listView === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => updateSetting("listView", "list")}
-                className="rounded-l-none"
-              >
-                <List className="h-4 w-4" />
-              </Button>
+            <div className="flex space-x-2">
+              <Badge variant="secondary">전체 {unusedGifticons.length}개</Badge>
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                사용가능 {unusedGifticons.length}개
+              </Badge>
             </div>
           </div>
 
@@ -156,7 +132,7 @@ function AllGifticonsPageContent() {
             <div className="bg-white rounded-lg p-12 text-center shadow-sm border">
               <Gift className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-medium text-gray-900 mb-2">
-                {searchTerm ? "검색 결과가 없습니다" : "등록된 기프티콘이 없습니다"}
+                {searchTerm ? "검색 결과가 없습니다" : "미사용 기프티콘이 없습니다"}
               </h3>
               <p className="text-gray-500 mb-6">
                 {searchTerm ? "다른 검색어를 시도해보세요" : "새로운 기프티콘을 등록해보세요!"}
@@ -192,10 +168,10 @@ function AllGifticonsPageContent() {
   )
 }
 
-export default function AllGifticonsPage() {
+export default function UnusedGifticonsPage() {
   return (
     <LayoutWrapper>
-      <AllGifticonsPageContent />
+      <UnusedGifticonsPageContent />
     </LayoutWrapper>
   )
 }

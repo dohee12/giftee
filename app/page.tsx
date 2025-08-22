@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
-import { Plus, Search, ArrowLeft, Bell, Gift, Grid, List, History, Settings } from "lucide-react"
+import { Plus, Search, ChevronLeft, Bell, Gift, Grid, List, History, Settings, X, Filter } from "lucide-react"
 import { useGifticons } from "@/hooks/use-gifticon-data"
 import { useSettings } from "@/hooks/use-app-settings"
 import { CategoryCard } from "@/components/category-overview-card"
@@ -20,10 +22,12 @@ import { AddGifticonDialog } from "@/components/add-gifticon-dialog"
 import { GifticonDetailDialog } from "@/components/gifticon-detail-dialog"
 import { LayoutWrapper } from "@/components/layout-wrapper"
 import { getBrandStats, filterAndSortGifticons, getDaysUntilExpiry } from "@/utils/gifticon-data-utils"
+import { categories } from "@/constants/gifticon-categories"
 import type { Gifticon } from "@/types/gifticon"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { GifticonFiltersDesktop } from "@/components/gifticon-filters-desktop"
 import { MobileFilters } from "@/components/mobile-filters"
+import { useAuth } from "@/contexts/auth-context"
 
 type ViewMode = "categories" | "brands" | "gifticons"
 
@@ -43,7 +47,7 @@ function BrandGifticonManagerContent() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedGifticon, setSelectedGifticon] = useState<Gifticon | null>(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { isLoggedIn, login, logout } = useAuth()
 
   const brandStats = getBrandStats(gifticons)
 
@@ -86,11 +90,11 @@ function BrandGifticonManagerContent() {
   }
 
   const handleLogin = () => {
-    setIsLoggedIn(true)
+    router.push("/auth/login")
   }
 
   const handleLogout = () => {
-    setIsLoggedIn(false)
+    logout()
   }
 
   const baseGifticonsForFiltering =
@@ -123,56 +127,63 @@ function BrandGifticonManagerContent() {
   return (
     <SidebarInset>
       {/* 헤더 */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
-        <div className="flex items-center space-x-1 md:space-x-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button 
-                className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                title="메뉴 토글"
-              >
-                <Gift className="h-6 w-6 text-blue-600" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
-              <div className="p-2">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">메뉴</h3>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/" className="flex items-center space-x-2 w-full">
-                    <Gift className="h-4 w-4" />
-                    <span>기프티콘 관리</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/history" className="flex items-center space-x-2 w-full">
-                    <History className="h-4 w-4" />
-                    <span>사용 내역</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="flex items-center space-x-2 w-full">
-                    <Settings className="h-4 w-4" />
-                    <span>설정</span>
-                  </Link>
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Link href="/" className="hover:opacity-80 transition-opacity">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white overflow-hidden">
+        {/* 왼쪽 섹션 */}
+        <div className="flex items-center space-x-1">
+          {/* 모바일에서만 사이드바 토글 표시 */}
+          <div className="md:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                  title="메뉴 토글"
+                >
+                  <Gift className="h-6 w-6 text-blue-600" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <div className="p-2">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">메뉴</h3>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/" className="flex items-center space-x-2 w-full">
+                      <Gift className="h-4 w-4" />
+                      <span>기프티콘 관리</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/history" className="flex items-center space-x-2 w-full">
+                      <History className="h-4 w-4" />
+                      <span>사용 내역</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex items-center space-x-2 w-full">
+                      <Settings className="h-4 w-4" />
+                      <span>설정</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <button 
+            onClick={() => {
+              setViewMode("categories")
+              setSelectedCategory("")
+              setSelectedBrand("")
+              setSearchTerm("")
+              setSelectedCategoryFilter("all")
+              setShowUsedFilter(false)
+            }}
+            className="hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <h1 className="text-lg font-bold text-gray-900">Giftee</h1>
-          </Link>
-
-          {viewMode !== "categories" && (
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              <ArrowLeft className="h-4 w-4" />
-              뒤로
-            </Button>
-          )}
+          </button>
         </div>
 
-        {/* 검색바 - PC에서 가운데 정렬 */}
-        <div className="hidden md:flex justify-center flex-1">
+        {/* 중앙 섹션 - PC 검색창 */}
+        <div className="hidden md:flex flex-1 justify-center">
           <div className="relative w-96">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -182,8 +193,9 @@ function BrandGifticonManagerContent() {
               className="pl-10"
             />
           </div>
-        </div>
+          </div>
 
+        {/* 오른쪽 섹션 */}
         <div className="flex items-center space-x-2">
           {/* 모바일 검색창 */}
           <div className="md:hidden relative w-48">
@@ -195,18 +207,20 @@ function BrandGifticonManagerContent() {
               className="pl-10"
             />
           </div>
+        </div>
 
+        <div className="flex items-center space-x-2">
           {/* 알림 */}
           {settings.expiryNotification && notifications.length > 0 && (
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2">
-                    <Bell className="h-5 w-5 text-gray-600" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                      {notifications.length}
-                    </span>
-                  </Button>
+              <Button variant="ghost" size="sm" className="p-2">
+                <Bell className="h-5 w-5 text-gray-600" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="p-2">
@@ -245,7 +259,7 @@ function BrandGifticonManagerContent() {
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-medium">U</span>
                   </div>
-                </Button>
+              </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem className="flex items-center space-x-2">
@@ -260,32 +274,8 @@ function BrandGifticonManagerContent() {
           ) : (
             <Button variant="ghost" size="sm" className="p-2" onClick={handleLogin}>
               <span className="text-sm font-medium text-gray-700">로그인</span>
-            </Button>
-          )}
-
-          {/* 뷰 토글 - 기프티콘 목록에서만 표시 */}
-          {viewMode === "gifticons" && (
-            <div className="flex border rounded-md">
-              <Button
-                variant={settings.listView === "card" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => updateSetting("listView", "card")}
-                className="rounded-r-none"
-              >
-                <Grid className="h-4 w-4" />
               </Button>
-              <Button
-                variant={settings.listView === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => updateSetting("listView", "list")}
-                className="rounded-l-none"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           )}
-
-
         </div>
       </header>
 
@@ -316,18 +306,117 @@ function BrandGifticonManagerContent() {
         {viewMode === "gifticons" && (
           <div className="bg-white rounded-lg shadow-sm border">
             {isMobile ? (
-              <MobileFilters
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedCategory={selectedCategoryFilter}
-                setSelectedCategory={setSelectedCategoryFilter}
-                sortBy={settings.sortBy}
-                setSortBy={(value) => updateSetting("sortBy", value as any)}
-                showUsed={showUsedFilter}
-                setShowUsed={setShowUsedFilter}
-              />
-            ) : (
               <div className="p-4">
+                <div className="space-y-3">
+                  {/* 검색바 */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="기프티콘 검색..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-10"
+                    />
+                    {searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSearchTerm("")}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* 필터 버튼과 뷰 토글 */}
+                  <div className="flex items-center space-x-4">
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="sm" className="relative bg-transparent">
+                          <Filter className="h-4 w-4 mr-2" />
+                          필터
+                          {[selectedCategoryFilter !== "all", settings.sortBy !== "expiryDate", showUsedFilter].filter(Boolean).length > 0 && (
+                            <Badge className="ml-2 h-5 w-5 p-0 text-xs bg-blue-600">
+                              {[selectedCategoryFilter !== "all", settings.sortBy !== "expiryDate", showUsedFilter].filter(Boolean).length}
+                            </Badge>
+                          )}
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="bottom" className="h-[400px]">
+                        <SheetHeader>
+                          <SheetTitle>필터 설정</SheetTitle>
+                        </SheetHeader>
+                        <div className="py-4 space-y-4">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">카테고리</label>
+                            <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">전체 카테고리</SelectItem>
+                                {Object.entries(categories).map(([key, category]) => (
+                                  <SelectItem key={key} value={key}>
+                                    {category.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">정렬 기준</label>
+                            <Select value={settings.sortBy} onValueChange={(value) => updateSetting("sortBy", value as any)}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="expiryDate">유효기간순</SelectItem>
+                                <SelectItem value="registeredAt">등록일순</SelectItem>
+                                <SelectItem value="brand">브랜드순</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex justify-start">
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={showUsedFilter}
+                                onChange={(e) => setShowUsedFilter(e.target.checked)}
+                                className="rounded"
+                              />
+                              <span className="text-sm text-gray-600">사용완료 포함</span>
+                            </label>
+                          </div>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                    
+                    {/* 모바일 뷰 토글 */}
+                    <div className="flex border rounded-md">
+                      <Button
+                        variant={settings.listView === "card" ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => updateSetting("listView", "card")}
+                        className="rounded-r-none"
+                      >
+                        <Grid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={settings.listView === "list" ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => updateSetting("listView", "list")}
+                        className="rounded-l-none"
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 flex justify-center">
+                <div className="w-full max-w-4xl">
                 <GifticonFiltersDesktop
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
@@ -337,7 +426,10 @@ function BrandGifticonManagerContent() {
                   setSortBy={(value) => updateSetting("sortBy", value as any)}
                   showUsed={showUsedFilter}
                   setShowUsed={setShowUsedFilter}
+                    listView={settings.listView}
+                    setListView={(value) => updateSetting("listView", value)}
                 />
+                </div>
               </div>
             )}
           </div>
@@ -382,22 +474,22 @@ function BrandGifticonManagerContent() {
                 <p className="text-2xl font-bold text-blue-600">
                   {gifticons.filter((g) => getDaysUntilExpiry(g.expiryDate) >= 0).length}
                 </p>
-                <p className="text-sm text-gray-600">전체 기프티콘</p>
+                <p className="text-sm text-gray-600">내 기프티콘</p>
               </Link>
-              <div className="bg-white rounded-lg p-4 text-center shadow-sm border">
+              <Link href="/unused-gifticons" className="bg-white rounded-lg p-4 text-center shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
                 <p className="text-2xl font-bold text-green-600">
                   {gifticons.filter((g) => !g.isUsed && getDaysUntilExpiry(g.expiryDate) >= 0).length}
                 </p>
-                <p className="text-sm text-gray-600">사용 가능</p>
-              </div>
+                <p className="text-sm text-gray-600">미사용 기프티콘</p>
+              </Link>
               <Link href="/expiring-soon" className="bg-white rounded-lg p-4 text-center shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
                 <p className="text-2xl font-bold text-yellow-600">{notifications.length}</p>
-                <p className="text-sm text-gray-600">곧 만료</p>
+                <p className="text-sm text-gray-600">곧 만료 기프티콘</p>
               </Link>
-              <div className="bg-white rounded-lg p-4 text-center shadow-sm border">
+              <Link href="/gifticon-brands" className="bg-white rounded-lg p-4 text-center shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
                 <p className="text-2xl font-bold text-purple-600">{Object.keys(brandStats).length}</p>
-                <p className="text-sm text-gray-600">브랜드 수</p>
-              </div>
+                <p className="text-sm text-gray-600">기프티콘 브랜드</p>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -417,8 +509,15 @@ function BrandGifticonManagerContent() {
         {viewMode === "brands" && (
           <>
             <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{selectedCategory} 카테고리</h2>
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="sm" onClick={handleBack} className="p-1">
+                  <ChevronLeft className="h-28 w-28 text-gray-500" />
+                </Button>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{categories[selectedCategory as keyof typeof categories]?.label || selectedCategory} 카테고리</h2>
               <p className="text-gray-600">{brandsByCategory[selectedCategory]?.length || 0}개의 브랜드</p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -439,9 +538,14 @@ function BrandGifticonManagerContent() {
           <>
             <div className="bg-white rounded-lg p-4 shadow-sm border">
               <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <Button variant="ghost" size="sm" onClick={handleBack} className="p-1">
+                    <ChevronLeft className="h-28 w-28 text-gray-500" />
+                  </Button>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">{selectedBrand}</h2>
                   <p className="text-gray-600">{displayedGifticons.length}개의 기프티콘</p>
+                  </div>
                 </div>
                 <div className="flex space-x-2">
                   <Badge variant="secondary">전체 {brandStats[selectedBrand]?.total || 0}개</Badge>

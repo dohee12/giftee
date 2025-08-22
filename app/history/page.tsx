@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
-import { Search, Calendar, TrendingUp, RotateCcw, ArrowLeft, FileX, Grid, List, Gift } from "lucide-react"
+import { Search, Calendar, TrendingUp, RotateCcw, ChevronLeft, FileX, Grid, List, Gift, History, Settings, Bell } from "lucide-react"
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useRouter } from "next/navigation"
@@ -18,6 +18,8 @@ import { brandLogos, categories } from "@/constants/gifticon-categories"
 import { getDaysUntilExpiry } from "@/utils/gifticon-data-utils"
 import { LayoutWrapper } from "@/components/layout-wrapper"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { AppHeader } from "@/components/app-header"
 
 function HistoryPageContent() {
   const router = useRouter()
@@ -101,49 +103,13 @@ function HistoryPageContent() {
 
   return (
     <SidebarInset>
-      {/* 헤더 */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
-        <div className="flex items-center space-x-1 md:space-x-5 flex-1">
-          {isMobile && (
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <button 
-            onClick={toggleSidebar}
-            className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-            title="사이드바 토글"
-          >
-            <Gift className="h-6 w-6 text-blue-600" />
-          </button>
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <h1 className="text-lg font-bold text-gray-900">Giftee</h1>
-          </Link>
-          <h1 className="text-xl font-bold text-gray-900">사용 내역</h1>
-        </div>
-        <div className="ml-auto flex items-center space-x-2">
-          <div className="flex border rounded-md">
-            <Button
-              variant={settings.listView === "card" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => updateSetting("listView", "card")}
-              className="rounded-r-none"
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={settings.listView === "list" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => updateSetting("listView", "list")}
-              className="rounded-l-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
 
       <div className="flex flex-1 flex-col gap-4 p-4 bg-gray-50">
+        <h1 className="text-2xl font-bold text-gray-900">사용 내역</h1>
         {/* 통계 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-white shadow-sm">
@@ -269,6 +235,24 @@ function HistoryPageContent() {
             <h3 className="text-lg font-semibold text-gray-900">
               사용 내역 및 만료 기프티콘 ({filteredHistoryGifticons.length}개)
             </h3>
+            <div className="flex border rounded-md">
+              <Button
+                variant={settings.listView === "card" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => updateSetting("listView", "card")}
+                className="rounded-r-none"
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={settings.listView === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => updateSetting("listView", "list")}
+                className="rounded-l-none"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {filteredHistoryGifticons.length > 0 ? (

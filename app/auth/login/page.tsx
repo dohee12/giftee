@@ -11,9 +11,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Gift, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
@@ -45,6 +47,8 @@ export default function LoginPage() {
     // 임시 로그인 처리 (실제로는 백엔드 API 호출)
     setTimeout(() => {
       setIsLoading(false)
+      // 로그인 상태 업데이트
+      login()
       // 성공 시 메인 페이지로 이동
       router.push("/")
     }, 1500)
@@ -54,6 +58,7 @@ export default function LoginPage() {
     setIsLoading(true)
     // 실제로는 소셜 로그인 API 호출
     setTimeout(() => {
+      login()
       router.push("/")
     }, 1000)
   }
@@ -65,7 +70,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center space-x-2 mb-4">
             <Gift className="h-10 w-10 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">기프티콘 모음북</span>
+            <span className="text-2xl font-bold text-gray-900">Giftee</span>
           </Link>
           <p className="text-gray-600">계정에 로그인하세요</p>
         </div>

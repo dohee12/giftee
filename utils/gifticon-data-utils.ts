@@ -18,11 +18,18 @@ export const getExpiryStatus = (expiryDate: string, isUsed: boolean) => {
 
 // getExpiringSoonGifticons 함수 시그니처 변경 및 로직 업데이트
 export const getExpiringSoonGifticons = (gifticons: Gifticon[], thresholdDays: number): Gifticon[] => {
-  return gifticons.filter((gifticon) => {
-    if (gifticon.isUsed) return false
-    const daysUntilExpiry = getDaysUntilExpiry(gifticon.expiryDate)
-    return daysUntilExpiry <= thresholdDays && daysUntilExpiry >= 0 // thresholdDays 사용
-  })
+  return gifticons
+    .filter((gifticon) => {
+      if (gifticon.isUsed) return false
+      const daysUntilExpiry = getDaysUntilExpiry(gifticon.expiryDate)
+      return daysUntilExpiry <= thresholdDays && daysUntilExpiry >= 0 // thresholdDays 사용
+    })
+    .sort((a, b) => {
+      // 만료일이 적게 남은 순으로 정렬 (오름차순)
+      const daysA = getDaysUntilExpiry(a.expiryDate)
+      const daysB = getDaysUntilExpiry(b.expiryDate)
+      return daysA - daysB
+    })
 }
 
 // getBrandStats 함수에서 getExpiringSoonGifticons 호출 시 thresholdDays 추가 (thresholdDays는 일단 7로 고정)

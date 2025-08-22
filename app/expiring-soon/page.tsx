@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
-import { Plus, Search, ArrowLeft, Bell, Gift, Grid, List } from "lucide-react"
+import { Plus, Search, ChevronLeft, Bell, Gift, Grid, List, History, Settings } from "lucide-react"
 import { useGifticons } from "@/hooks/use-gifticon-data"
 import { useSettings } from "@/hooks/use-app-settings"
 import { GifticonCard } from "@/components/gifticon-card"
@@ -21,6 +21,7 @@ import { GifticonFiltersDesktop } from "@/components/gifticon-filters-desktop"
 import { MobileFilters } from "@/components/mobile-filters"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import { AppHeader } from "@/components/app-header"
 import { useRouter } from "next/navigation"
 
 function ExpiringSoonPageContent() {
@@ -47,86 +48,20 @@ function ExpiringSoonPageContent() {
   // 곧 만료될 기프티콘만 필터링
   const expiringSoonGifticons = getExpiringSoonGifticons(gifticons, settings.expiryNotificationDays)
 
+  // 만료 임박 기프티콘은 항상 만료일이 빠른 순으로 정렬
   const displayedGifticons = filterAndSortGifticons(
     expiringSoonGifticons,
     searchTerm,
     selectedCategoryFilter,
-    settings.sortBy,
-    settings.sortOrder,
+    "expiryDate", // 항상 만료일 기준으로 정렬
+    "asc", // 오름차순 (빠른 순)
     showUsedFilter,
     true,
   )
 
   return (
     <SidebarInset>
-      {/* 헤더 */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
-        <div className="flex items-center space-x-1 md:space-x-0 flex-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button 
-                className="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                title="메뉴 토글"
-              >
-                <Gift className="h-6 w-6 text-blue-600" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
-              <div className="p-2">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">메뉴</h3>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/" className="flex items-center space-x-2 w-full">
-                    <Gift className="h-4 w-4" />
-                    <span>기프티콘 관리</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/history" className="flex items-center space-x-2 w-full">
-                    <span>사용 내역</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="flex items-center space-x-2 w-full">
-                    <span>설정</span>
-                  </Link>
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <h1 className="text-lg font-bold text-gray-900">Giftee</h1>
-          </Link>
-          {isMobile && (
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <h1 className="text-xl font-bold text-gray-900">곧 만료</h1>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {/* 뷰 토글 */}
-          <div className="flex border rounded-md">
-            <Button
-              variant={settings.listView === "card" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => updateSetting("listView", "card")}
-              className="rounded-r-none"
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={settings.listView === "list" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => updateSetting("listView", "list")}
-              className="rounded-l-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <div className="flex flex-1 flex-col gap-4 p-4 bg-gray-50">
         {/* 만료 알림 */}
@@ -159,8 +94,8 @@ function ExpiringSoonPageContent() {
               setSearchTerm={setSearchTerm}
               selectedCategory={selectedCategoryFilter}
               setSelectedCategory={setSelectedCategoryFilter}
-              sortBy={settings.sortBy}
-              setSortBy={(value) => updateSetting("sortBy", value as any)}
+              sortBy="expiryDate"
+              setSortBy={() => {}} // 만료 임박 페이지에서는 정렬 변경 불가
               showUsed={showUsedFilter}
               setShowUsed={setShowUsedFilter}
             />
@@ -171,10 +106,12 @@ function ExpiringSoonPageContent() {
                 setSearchTerm={setSearchTerm}
                 selectedCategory={selectedCategoryFilter}
                 setSelectedCategory={setSelectedCategoryFilter}
-                sortBy={settings.sortBy}
-                setSortBy={(value) => updateSetting("sortBy", value as any)}
+                sortBy="expiryDate"
+                setSortBy={() => {}} // 만료 임박 페이지에서는 정렬 변경 불가
                 showUsed={showUsedFilter}
                 setShowUsed={setShowUsedFilter}
+                listView={settings.listView}
+                setListView={(value) => updateSetting("listView", value)}
               />
             </div>
           )}
