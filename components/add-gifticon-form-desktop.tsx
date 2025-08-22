@@ -87,7 +87,12 @@ export function AddGifticonForm({ onAdd }: AddGifticonFormProps) {
             <Label htmlFor="category">카테고리</Label>
             <Select value={formData.category} onValueChange={(value: any) => updateFormData("category", value)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>
+                  {formData.category && formData.category !== "other" 
+                    ? categories[formData.category]?.label || "-"
+                    : "-"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(categories).map(([key, category]) => (

@@ -6,27 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
-import { Search, Calendar, TrendingUp, RotateCcw, ChevronLeft, FileX, Grid, List, Gift, History, Settings, Bell } from "lucide-react"
+import { SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
+import { Search, Calendar, TrendingUp, RotateCcw, ArrowLeft, FileX, Grid, List } from "lucide-react"
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { useGifticons } from "@/hooks/use-gifticon-data"
 import { useSettings } from "@/hooks/use-app-settings"
 import { brandLogos, categories } from "@/constants/gifticon-categories"
 import { getDaysUntilExpiry } from "@/utils/gifticon-data-utils"
 import { LayoutWrapper } from "@/components/layout-wrapper"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { AppHeader } from "@/components/app-header"
 
 function HistoryPageContent() {
   const router = useRouter()
   const { gifticons, toggleUsed } = useGifticons()
   const { settings, updateSetting } = useSettings()
-  const { toggleSidebar } = useSidebar()
-  const isMobile = useIsMobile()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMonth, setSelectedMonth] = useState<string>("all")
   const [selectedBrand, setSelectedBrand] = useState<string>("all")
@@ -103,13 +97,38 @@ function HistoryPageContent() {
 
   return (
     <SidebarInset>
-      <AppHeader
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-      />
+      {/* 헤더 */}
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+        <SidebarTrigger className="-ml-1" />
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl font-bold text-gray-900">사용 내역</h1>
+        </div>
+        <div className="ml-auto flex items-center space-x-2">
+          <div className="flex border rounded-md">
+            <Button
+              variant={settings.listView === "card" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => updateSetting("listView", "card")}
+              className="rounded-r-none"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={settings.listView === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => updateSetting("listView", "list")}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
 
       <div className="flex flex-1 flex-col gap-4 p-4 bg-gray-50">
-        <h1 className="text-2xl font-bold text-gray-900">사용 내역</h1>
         {/* 통계 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-white shadow-sm">
@@ -235,24 +254,6 @@ function HistoryPageContent() {
             <h3 className="text-lg font-semibold text-gray-900">
               사용 내역 및 만료 기프티콘 ({filteredHistoryGifticons.length}개)
             </h3>
-            <div className="flex border rounded-md">
-              <Button
-                variant={settings.listView === "card" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => updateSetting("listView", "card")}
-                className="rounded-r-none"
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={settings.listView === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => updateSetting("listView", "list")}
-                className="rounded-l-none"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
 
           {filteredHistoryGifticons.length > 0 ? (
@@ -263,8 +264,12 @@ function HistoryPageContent() {
             >
               {filteredHistoryGifticons.map((gifticon) => {
                 const logo = brandLogos[gifticon.brand] || "🏪"
-                const categoryInfo = categories[gifticon.category]
-                const isExpired = getDaysUntilExpiry(gifticon.expiryDate) < 0
+                const categoryInfo = categories[gifticon.category] || {
+                  label: gifticon.category || "기타",
+                  color: "text-gray-600",
+                  bgColor: "bg-gray-100"
+                }
+                const isExpired = gifticon.expiryDate === "no-expiry" ? false : getDaysUntilExpiry(gifticon.expiryDate) < 0
                 const statusText = gifticon.isUsed ? "사용완료" : isExpired ? "만료됨" : "기타"
                 const statusColor = gifticon.isUsed
                   ? "bg-gray-100 text-gray-600"
@@ -307,10 +312,10 @@ function HistoryPageContent() {
                           <p className="text-base font-bold text-gray-600">{gifticon.price.toLocaleString()}원</p>
                         )}
                         <p className="text-xs text-gray-500">
-                          만료일: {format(parseISO(gifticon.expiryDate), "yyyy년 M월 d일", { locale: ko })}
+                          만료일: {gifticon.expiryDate === "no-expiry" ? "만료일 없음" : format(parseISO(gifticon.expiryDate), "yyyy년 M월 d일", { locale: ko })}
                         </p>
                         <p className="text-xs text-gray-500">
-                          등록일: {format(parseISO(gifticon.registeredAt), "yyyy년 M월 d일", { locale: ko })}
+                          등록일: {gifticon.registeredAt ? format(parseISO(gifticon.registeredAt), "yyyy년 M월 d일", { locale: ko }) : "등록일 없음"}
                         </p>
                         {gifticon.memo && <p className="text-xs text-gray-500 italic line-clamp-2">{gifticon.memo}</p>}
                       </div>
