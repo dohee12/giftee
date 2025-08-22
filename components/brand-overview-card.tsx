@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronRight, Clock, ChevronLeft } from "lucide-react"
+import { ChevronRight, Clock } from "lucide-react"
 import { brandLogos } from "@/constants/gifticon-categories"
 import type { Brand } from "@/types/gifticon"
 

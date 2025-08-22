@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
-  ChevronLeft,
+  ArrowLeft,
   Search,
   Camera,
   Bell,
@@ -173,7 +173,7 @@ export default function HelpPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                <ChevronLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
               <div className="flex items-center space-x-2">
                 <HelpCircle className="h-8 w-8 text-blue-600" />

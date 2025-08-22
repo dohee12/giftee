@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Gift } from "lucide-react"
 import { categories } from "@/constants/gifticon-categories"
 import type { Brand } from "@/types/gifticon"
 
@@ -13,7 +13,12 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, brands, onClick }: CategoryCardProps) {
-  const categoryInfo = categories[category as keyof typeof categories]
+  const categoryInfo = categories[category as keyof typeof categories] || {
+    label: "알 수 없음",
+    icon: Gift,
+    color: "text-gray-700",
+    bgColor: "bg-gray-50 border-gray-200",
+  }
   const Icon = categoryInfo.icon
 
   const totalCount = brands.reduce((sum, brand) => sum + brand.count, 0)

@@ -6,36 +6,27 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
+import { SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
 import {
   ChevronRight,
   Share2,
   FileText,
   Upload,
   Download,
-  ChevronLeft,
+  ArrowLeft,
   SettingsIcon,
   Palette,
   Bell,
   Zap,
-  Gift,
-  History,
-  Settings,
+  Sparkles,
 } from "lucide-react"
 import { useSettings, type ListView, type SortBy, type SortOrder } from "@/hooks/use-app-settings"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { LayoutWrapper } from "@/components/layout-wrapper"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { AppHeader } from "@/components/app-header"
 
 function SettingsPageContent() {
   const { settings, updateSetting } = useSettings()
   const router = useRouter()
-  const { toggleSidebar } = useSidebar()
-  const isMobile = useIsMobile()
-
 
   const handleBackup = () => {
     const data = localStorage.getItem("gifticon-data")
@@ -106,155 +97,346 @@ function SettingsPageContent() {
 
   return (
     <SidebarInset>
-      <AppHeader />
-      <div className="flex flex-1 bg-gray-50">
-        {/* 좌측 설정 사이드바 */}
-        <aside className="hidden md:block w-64 border-r bg-white p-4 sticky top-16 self-start">
-          <nav className="space-y-1 text-sm">
-            <a href="#section-display" className="block px-3 py-2 rounded hover:bg-gray-100">화면 표시</a>
-            <a href="#section-sort" className="block px-3 py-2 rounded hover:bg-gray-100">정렬 설정</a>
-            <a href="#section-noti" className="block px-3 py-2 rounded hover:bg-gray-100">알림 설정</a>
-            <a href="#section-account" className="block px-3 py-2 rounded hover:bg-gray-100">계정</a>
-            <a href="#section-security" className="block px-3 py-2 rounded hover:bg-gray-100">보안</a>
-            <a href="#section-export" className="block px-3 py-2 rounded hover:bg-gray-100">데이터 내보내기</a>
-          </nav>
-        </aside>
+      {/* 헤더 */}
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+        <SidebarTrigger className="-ml-1" />
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center space-x-2">
+            <SettingsIcon className="h-6 w-6 text-gray-600" />
+            <h1 className="text-xl font-bold text-gray-900">설정</h1>
+          </div>
+        </div>
+      </header>
 
-        {/* 우측 섹션형 폼 */}
-        <main className="flex-1 p-4 md:p-8">
-          <div className="mx-auto w-full max-w-[1150px]">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">설정</h1>
+      <div className="flex flex-1 flex-col gap-4 p-4 bg-gray-50">
+        <div className="max-w-3xl mx-auto w-full space-y-6">
+          {/* 화면 표시 설정 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <Palette className="h-5 w-5 text-blue-600" />
+                <span>화면 표시</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">기프티콘 리스트 형태</Label>
+                  <p className="text-sm text-gray-500 mt-1">카드형 또는 리스트형으로 표시 방식을 선택할 수 있습니다.</p>
+                </div>
+                <RadioGroup
+                  value={settings.listView}
+                  onValueChange={(value: ListView) => updateSetting("listView", value)}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="card" id="card-view" />
+                    <Label htmlFor="card-view">카드형</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="list" id="list-view" />
+                    <Label htmlFor="list-view">리스트형</Label>
+                  </div>
+                </RadioGroup>
+              </div>
 
-            {/* 화면 표시 */}
-            <section id="section-display" className="bg-white rounded-lg border">
-              <div className="px-6 py-4 border-b">
-                <h2 className="text-lg font-semibold">화면 표시</h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">바코드 밝기 최적화</Label>
+                  <p className="text-sm text-gray-500 mt-1">바코드를 더 밝게 표시하여 스캔 인식률을 향상시킵니다.</p>
+                </div>
+                <Switch
+                  checked={settings.barcodeBrightness}
+                  onCheckedChange={(value) => updateSetting("barcodeBrightness", value)}
+                />
               </div>
-              <div className="p-6 space-y-6">
-                <fieldset className="flex items-center justify-between">
-                  <div>
-                    <legend className="text-base font-medium">기프티콘 리스트 형태</legend>
-                    <p className="text-sm text-gray-500 mt-1">카드형 또는 리스트형으로 선택하세요.</p>
-                  </div>
-                  <RadioGroup value={settings.listView} onValueChange={(v: ListView) => updateSetting("listView", v)} className="flex space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="card" id="card-view" />
-                      <Label htmlFor="card-view">카드형</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="list" id="list-view" />
-                      <Label htmlFor="list-view">리스트형</Label>
-                    </div>
-                  </RadioGroup>
-                </fieldset>
+            </CardContent>
+          </Card>
 
-                <fieldset className="flex items-center justify-between">
-                  <div>
-                    <legend className="text-base font-medium">바코드 밝기 최적화</legend>
-                    <p className="text-sm text-gray-500 mt-1">바코드를 더 밝게 표시하여 스캔 인식률 향상</p>
-                  </div>
-                  <Switch checked={settings.barcodeBrightness} onCheckedChange={(v) => updateSetting("barcodeBrightness", v)} />
-                </fieldset>
+          {/* 정렬 설정 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <ArrowLeft className="h-5 w-5 text-blue-600 rotate-90" />
+                <span>정렬 설정</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">정렬 기준</Label>
+                  <p className="text-sm text-gray-500 mt-1">기프티콘 목록의 기본 정렬 방식을 설정합니다.</p>
+                </div>
+                <Select value={settings.sortBy} onValueChange={(value: SortBy) => updateSetting("sortBy", value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="brand">브랜드 이름</SelectItem>
+                    <SelectItem value="expiryDate">유효기간</SelectItem>
+                    <SelectItem value="registeredAt">등록일</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </section>
 
-            {/* 정렬 설정 */}
-            <section id="section-sort" className="bg-white rounded-lg border mt-8">
-              <div className="px-6 py-4 border-b">
-                <h2 className="text-lg font-semibold">정렬 설정</h2>
-              </div>
-              <div className="p-6 space-y-6">
-                <fieldset className="flex items-center justify-between">
-                  <div>
-                    <legend className="text-base font-medium">정렬 기준/순서</legend>
-                    <p className="text-sm text-gray-500 mt-1">브랜드/등록일/만료일 + 오름/내림</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">정렬 순서</Label>
+                  <p className="text-sm text-gray-500 mt-1">오름차순 또는 내림차순으로 정렬할 수 있습니다.</p>
+                </div>
+                <RadioGroup
+                  value={settings.sortOrder}
+                  onValueChange={(value: SortOrder) => updateSetting("sortOrder", value)}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="asc" id="sort-asc" />
+                    <Label htmlFor="sort-asc">오름차순</Label>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Select value={settings.sortBy} onValueChange={(v) => updateSetting("sortBy", v as SortBy)}>
-                      <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="brand">브랜드</SelectItem>
-                        <SelectItem value="registeredAt">등록일</SelectItem>
-                        <SelectItem value="expiryDate">만료일</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={settings.sortOrder} onValueChange={(v) => updateSetting("sortOrder", v as SortOrder)}>
-                      <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="asc">오름차순</SelectItem>
-                        <SelectItem value="desc">내림차순</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="desc" id="sort-desc" />
+                    <Label htmlFor="sort-desc">내림차순</Label>
                   </div>
-                </fieldset>
+                </RadioGroup>
               </div>
-            </section>
+            </CardContent>
+          </Card>
 
-            {/* 알림 설정 */}
-            <section id="section-noti" className="bg-white rounded-lg border mt-8">
-              <div className="px-6 py-4 border-b">
-                <h2 className="text-lg font-semibold">알림 설정</h2>
+          {/* 알림 설정 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <Bell className="h-5 w-5 text-blue-600" />
+                <span>알림 설정</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">유효기간 임박 알림</Label>
+                  <p className="text-sm text-gray-500 mt-1">기프티콘 만료가 가까워지면 알림을 받을 수 있습니다.</p>
+                </div>
+                <Switch
+                  checked={settings.expiryNotification}
+                  onCheckedChange={(value) => updateSetting("expiryNotification", value)}
+                />
               </div>
-              <div className="p-6 space-y-6">
-                <fieldset className="flex items-center justify-between">
+
+              {settings.expiryNotification && (
+                <div className="flex items-center justify-between pl-4 border-l-2 border-blue-200 bg-blue-50 p-4 rounded-r-lg">
                   <div>
-                    <legend className="text-base font-medium">만료 임박 알림</legend>
-                    <p className="text-sm text-gray-500 mt-1">만료일이 가까워지면 알림 표시</p>
+                    <Label className="text-base font-medium">알림 시점</Label>
+                    <p className="text-sm text-gray-500 mt-1">만료 며칠 전에 알림을 받을지 설정합니다.</p>
                   </div>
-                  <Switch checked={settings.expiryNotification} onCheckedChange={(v) => updateSetting("expiryNotification", v)} />
-                </fieldset>
-                <fieldset className="flex items-center justify-between">
-                  <div>
-                    <legend className="text-base font-medium">알림 기준 일수</legend>
-                    <p className="text-sm text-gray-500 mt-1">며칠 전에 알림을 받을지 선택</p>
-                  </div>
-                  <Select value={String(settings.expiryNotificationDays)} onValueChange={(v) => updateSetting("expiryNotificationDays", Number(v))}>
-                    <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={settings.expiryNotificationDays.toString()}
+                    onValueChange={(value) => updateSetting("expiryNotificationDays", Number.parseInt(value))}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="3">3일 전</SelectItem>
-                      <SelectItem value="5">5일 전</SelectItem>
                       <SelectItem value="7">7일 전</SelectItem>
                       <SelectItem value="14">14일 전</SelectItem>
+                      <SelectItem value="30">30일 전</SelectItem>
                     </SelectContent>
                   </Select>
-                </fieldset>
-              </div>
-            </section>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* 계정/보안 플레이스홀더 */}
-            <section id="section-account" className="bg-white rounded-lg border mt-8">
-              <div className="px-6 py-4 border-b"><h2 className="text-lg font-semibold">계정</h2></div>
-              <div className="p-6 text-sm text-gray-500">계정 설정은 추후 연동 예정입니다.</div>
-            </section>
-            <section id="section-security" className="bg-white rounded-lg border mt-8">
-              <div className="px-6 py-4 border-b"><h2 className="text-lg font-semibold">보안</h2></div>
-              <div className="p-6 text-sm text-gray-500">보안 옵션은 추후 추가 예정입니다.</div>
-            </section>
-
-            {/* 데이터 내보내기 */}
-            <section id="section-export" className="bg-white rounded-lg border mt-8 mb-24">
-              <div className="px-6 py-4 border-b"><h2 className="text-lg font-semibold">데이터 내보내기</h2></div>
-              <div className="p-6 flex items-center justify-between">
+          {/* AI 추천 설정 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                <span>AI 추천 설정</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-base font-medium">백업 / 복원</p>
-                  <p className="text-sm text-gray-500 mt-1">기프티콘 데이터와 설정을 JSON으로 저장/복원</p>
+                  <Label className="text-base font-medium">AI 추천 기능</Label>
+                  <p className="text-sm text-gray-500 mt-1">
+                    시간대, 날씨, 상황에 맞는 기프티콘을 자동으로 추천받습니다.
+                  </p>
                 </div>
-                <div className="space-x-2">
-                  <Button variant="outline" onClick={handleBackup}>백업 파일 다운로드</Button>
-                  <Button variant="ghost" onClick={handleRestore}>백업에서 복원</Button>
-                </div>
+                <Switch
+                  checked={settings.aiRecommendations}
+                  onCheckedChange={(value) => updateSetting("aiRecommendations", value)}
+                />
               </div>
-            </section>
-          </div>
-        </main>
-      </div>
 
-      {/* 하단 고정 액션 바 */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-white/90 backdrop-blur px-4 py-3">
-        <div className="mx-auto max-w-[1150px] flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => window.location.reload()}>취소</Button>
-          <Button variant="outline" onClick={handleRestore}>초기화</Button>
-          <Button onClick={() => alert("저장되었습니다.")}>저장</Button>
+              {settings.aiRecommendations && (
+                <>
+                  <div className="flex items-center justify-between pl-4 border-l-2 border-purple-200 bg-purple-50 p-4 rounded-r-lg">
+                    <div>
+                      <Label className="text-base font-medium">추천 빈도</Label>
+                      <p className="text-sm text-gray-500 mt-1">AI 추천을 얼마나 자주 업데이트할지 설정합니다.</p>
+                    </div>
+                    <Select
+                      value={settings.aiRecommendationFrequency}
+                      onValueChange={(value: "realtime" | "hourly" | "daily") =>
+                        updateSetting("aiRecommendationFrequency", value)
+                      }
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="realtime">실시간</SelectItem>
+                        <SelectItem value="hourly">1시간마다</SelectItem>
+                        <SelectItem value="daily">하루마다</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between pl-4 border-l-2 border-purple-200 bg-purple-50 p-4 rounded-r-lg">
+                    <div>
+                      <Label className="text-base font-medium">추천 배지 표시</Label>
+                      <p className="text-sm text-gray-500 mt-1">추천된 기프티콘에 특별한 배지를 표시합니다.</p>
+                    </div>
+                    <Switch
+                      checked={settings.showRecommendationBadges}
+                      onCheckedChange={(value) => updateSetting("showRecommendationBadges", value)}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 자동화 기능 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <Zap className="h-5 w-5 text-blue-600" />
+                <span>자동화 기능</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between opacity-50">
+                <div>
+                  <Label className="text-base font-medium">쿠폰 자동 인식 (갤러리)</Label>
+                  <p className="text-sm text-gray-500 mt-1">갤러리에 저장된 기프티콘 이미지를 자동으로 인식합니다.</p>
+                  <p className="text-xs text-gray-400 mt-1">* 웹 환경에서는 지원되지 않습니다.</p>
+                </div>
+                <Switch
+                  checked={settings.autoCouponRecognition}
+                  onCheckedChange={(value) => updateSetting("autoCouponRecognition", value)}
+                  disabled
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">이미지 업로드 시 자동 분석 (OCR)</Label>
+                  <p className="text-sm text-gray-500 mt-1">업로드한 이미지에서 기프티콘 정보를 자동으로 추출합니다.</p>
+                </div>
+                <Switch
+                  checked={settings.autoImageInput}
+                  onCheckedChange={(value) => updateSetting("autoImageInput", value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 데이터 관리 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle>데이터 관리</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button variant="outline" className="w-full justify-between bg-transparent" onClick={handleBackup}>
+                <span className="flex items-center space-x-3">
+                  <Download className="h-4 w-4 text-blue-600" />
+                  <div className="text-left">
+                    <p className="font-medium">백업</p>
+                    <p className="text-sm text-gray-500">기프티콘 데이터를 파일로 저장</p>
+                  </div>
+                </span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </Button>
+
+              <Button variant="outline" className="w-full justify-between bg-transparent" onClick={handleRestore}>
+                <span className="flex items-center space-x-3">
+                  <Upload className="h-4 w-4 text-green-600" />
+                  <div className="text-left">
+                    <p className="font-medium">복원</p>
+                    <p className="text-sm text-gray-500">백업 파일에서 데이터 복원</p>
+                  </div>
+                </span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* 기타 설정 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle>기타 설정</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                className="w-full justify-between bg-transparent"
+                onClick={handleCategorySettings}
+              >
+                <span className="flex items-center space-x-3">
+                  <SettingsIcon className="h-4 w-4 text-gray-600" />
+                  <div className="text-left">
+                    <p className="font-medium">카테고리 설정</p>
+                    <p className="text-sm text-gray-500">사용자 정의 카테고리 관리</p>
+                  </div>
+                </span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* 앱 정보 */}
+          <Card className="bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle>앱 정보</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button variant="outline" className="w-full justify-between bg-transparent" onClick={handleRecommendApp}>
+                <span className="flex items-center space-x-3">
+                  <Share2 className="h-4 w-4 text-blue-600" />
+                  <div className="text-left">
+                    <p className="font-medium">앱 추천하기</p>
+                    <p className="text-sm text-gray-500">친구들에게 앱을 소개해보세요</p>
+                  </div>
+                </span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-between bg-transparent"
+                onClick={() => router.push("/terms")}
+              >
+                <span className="flex items-center space-x-3">
+                  <FileText className="h-4 w-4 text-gray-600" />
+                  <div className="text-left">
+                    <p className="font-medium">약관 및 정책</p>
+                    <p className="text-sm text-gray-500">이용약관, 개인정보처리방침</p>
+                  </div>
+                </span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </Button>
+
+              <div className="text-center py-4 border-t">
+                <p className="text-sm text-gray-500">기프티콘 모음북 v1.0.0</p>
+                <p className="text-xs text-gray-400 mt-1">&copy; 2025 Gifticon Book. All rights reserved.</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </SidebarInset>

@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/contexts/auth-context"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -43,7 +43,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="기프티콘 모음북" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   )

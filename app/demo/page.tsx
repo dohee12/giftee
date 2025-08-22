@@ -1,29 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Gift, ChevronLeft, Info, ExternalLink, CheckCircle, Bell, TrendingUp, Star } from "lucide-react"
+import { Gift, ArrowLeft, Info, ExternalLink, CheckCircle, Bell, TrendingUp, Star } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { GifticonCard } from "@/components/gifticon-card"
 import { GifticonDetailDialog } from "@/components/gifticon-detail-dialog"
 import type { Gifticon } from "@/types/gifticon"
-import { useAuth } from "@/contexts/auth-context"
 
 export default function DemoPage() {
   const router = useRouter()
-  const { isLoggedIn } = useAuth()
   const [selectedGifticon, setSelectedGifticon] = useState<Gifticon | null>(null)
-
-  // 로그인된 경우 메인 페이지로 리다이렉트
-  useEffect(() => {
-    if (isLoggedIn) {
-      router.push("/")
-    }
-  }, [isLoggedIn, router])
 
   // 데모용 샘플 데이터
   const demoGifticons: Gifticon[] = [
@@ -121,7 +112,7 @@ export default function DemoPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                <ChevronLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
               <div className="flex items-center space-x-2">
                 <Gift className="h-8 w-8 text-blue-600" />
