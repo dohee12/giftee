@@ -23,12 +23,12 @@ export function AIRecommendationAlert({ recommendation, onDismiss, onUseGifticon
         return <Clock className="h-4 w-4" />
       case "event-based":
         return <Calendar className="h-4 w-4" />
-      case "expiry-based":
-        return <Zap className="h-4 w-4" />
       default:
         return <Sparkles className="h-4 w-4" />
     }
   }
+
+
 
   const getPriorityColor = () => {
     switch (recommendation.priority) {

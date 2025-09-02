@@ -269,8 +269,7 @@ export class AIRecommendationEngine {
           usedGifticonIds.add(rec.recommendedGifticons[0].id)
           console.log("⏰ 시간 기반 추천 생성:", rec.title)
           console.log(`🎯 추천된 기프티콘: ${rec.recommendedGifticons[0].name} (유효기간: ${rec.recommendedGifticons[0].expiryDate})`)
-          console.log("🎉 첫 번째 추천 완료! 다른 추천은 생성하지 않습니다.")
-          return recommendations
+          console.log("🎉 시간 기반 추천 완료!")
         }
       }
     }
@@ -285,8 +284,7 @@ export class AIRecommendationEngine {
           usedGifticonIds.add(rec.recommendedGifticons[0].id)
           console.log("🌤️ 날씨 기반 추천 생성:", rec.title)
           console.log(`🎯 추천된 기프티콘: ${rec.recommendedGifticons[0].name} (유효기간: ${rec.recommendedGifticons[0].expiryDate})`)
-          console.log("🎉 첫 번째 추천 완료! 다른 추천은 생성하지 않습니다.")
-          return recommendations
+          console.log("🎉 날씨 기반 추천 완료!")
         }
       }
     }
@@ -301,8 +299,7 @@ export class AIRecommendationEngine {
           usedGifticonIds.add(rec.recommendedGifticons[0].id)
           console.log("🎉 이벤트 기반 추천 생성:", rec.title)
           console.log(`🎯 추천된 기프티콘: ${rec.recommendedGifticons[0].name} (유효기간: ${rec.recommendedGifticons[0].expiryDate})`)
-          console.log("🎉 첫 번째 추천 완료! 다른 추천은 생성하지 않습니다.")
-          return recommendations
+          console.log("🎉 이벤트 기반 추천 완료!")
         }
       }
     }
@@ -317,8 +314,7 @@ export class AIRecommendationEngine {
           usedGifticonIds.add(rec.recommendedGifticons[0].id)
           console.log("🍂 계절 기반 추천 생성:", rec.title)
           console.log(`🎯 추천된 기프티콘: ${rec.recommendedGifticons[0].name} (유효기간: ${rec.recommendedGifticons[0].expiryDate})`)
-          console.log("🎉 첫 번째 추천 완료! 다른 추천은 생성하지 않습니다.")
-          return recommendations
+          console.log("🍂 계절 기반 추천 완료!")
         }
       }
     }
@@ -333,8 +329,7 @@ export class AIRecommendationEngine {
           usedGifticonIds.add(rec.recommendedGifticons[0].id)
           console.log("😊 기분 기반 추천 생성:", rec.title)
           console.log(`🎯 추천된 기프티콘: ${rec.recommendedGifticons[0].name} (유효기간: ${rec.recommendedGifticons[0].expiryDate})`)
-          console.log("🎉 첫 번째 추천 완료! 다른 추천은 생성하지 않습니다.")
-          return recommendations
+          console.log("😊 기분 기반 추천 완료!")
         }
       }
     }
@@ -348,8 +343,7 @@ export class AIRecommendationEngine {
         usedGifticonIds.add(rec.recommendedGifticons[0].id)
         console.log("📊 패턴 기반 추천 생성:", rec.title)
         console.log(`🎯 추천된 기프티콘: ${rec.recommendedGifticons[0].name} (유효기간: ${rec.recommendedGifticons[0].expiryDate})`)
-        console.log("🎉 첫 번째 추천 완료! 다른 추천은 생성하지 않습니다.")
-        return recommendations
+        console.log("📊 패턴 기반 추천 완료!")
       }
     }
 
@@ -373,7 +367,7 @@ export class AIRecommendationEngine {
     }
 
     console.log(`🎉 총 ${recommendations.length}개의 추천 생성 완료!`)
-    return recommendations.slice(0, 1) // 1개만 반환
+    return recommendations // 모든 추천 반환
   }
 
   private buildContext(

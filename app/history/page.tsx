@@ -4,34 +4,33 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SidebarInset, useSidebar } from "@/components/ui/sidebar"
-import { Search, Calendar, TrendingUp, RotateCcw, ChevronLeft, FileX, Grid, List, Gift, History, Settings, Bell } from "lucide-react"
+import { SidebarInset } from "@/components/ui/sidebar"
+import { Search, Calendar, TrendingUp, RotateCcw, FileX, Grid, List, Bell } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import Link from "next/link"
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { useGifticons } from "@/hooks/use-gifticon-data"
 import { useSettings } from "@/hooks/use-app-settings"
-import { brandLogos, categories } from "@/constants/gifticon-categories"
+import { GifticonCard } from "@/components/gifticon-card"
+import { GifticonListItem } from "@/components/gifticon-list-item"
+import { GifticonDetailDialog } from "@/components/gifticon-detail-dialog"
+import type { Gifticon } from "@/types/gifticon"
 import { getDaysUntilExpiry } from "@/utils/gifticon-data-utils"
 import { LayoutWrapper } from "@/components/layout-wrapper"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { AppHeader } from "@/components/app-header"
 
 function HistoryPageContent() {
   const router = useRouter()
-  const { gifticons, toggleUsed } = useGifticons()
+  const { gifticons, toggleUsed, notifications } = useGifticons()
   const { settings, updateSetting } = useSettings()
-  const { toggleSidebar } = useSidebar()
-  const isMobile = useIsMobile()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMonth, setSelectedMonth] = useState<string>("all")
   const [selectedBrand, setSelectedBrand] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("registeredAt")
+  const [selectedGifticon, setSelectedGifticon] = useState<Gifticon | null>(null)
 
   // 히스토리 데이터 (사용됨 + 만료됨)
   const historyGifticons = gifticons.filter((g) => {
@@ -103,15 +102,57 @@ function HistoryPageContent() {
 
   return (
     <SidebarInset>
-      <AppHeader
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-      />
+      {/* 헤더: 홈과 동일 */}
+      <header className="relative flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+        <div className="flex items-center space-x-4 flex-1">
+          <div className="flex items-center space-x-2">
+            <Link href="/">
+              <h1 className="text-lg font-bold text-gray-900 cursor-pointer font-logo">Giftee</h1>
+            </Link>
+          </div>
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center w-full max-w-md z-10 pointer-events-none">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="기프티콘 검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pointer-events-auto"
+            />
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          {settings.expiryNotification && notifications.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-2 relative">
+                  <Bell className="h-5 w-5 text-gray-600" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 p-0">
+                <div className="p-2 text-xs text-amber-700 bg-amber-50">⏰ 곧 만료되는 기프티콘이 {notifications.length}개 있어요.</div>
+                <div className="max-h-64 overflow-auto divide-y">
+                  {notifications.slice(0, 10).map((g) => (
+                    <div key={g.id} className="p-3 text-sm">
+                      <div className="font-medium text-gray-900 truncate">{g.brand} {g.name}</div>
+                      <div className="text-xs text-gray-600">{g.expiryDate}</div>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <Link href="/auth/login">
+            <Button variant="ghost" size="sm">로그인</Button>
+          </Link>
+        </div>
+      </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4 bg-gray-50">
-        <h1 className="text-2xl font-bold text-gray-900">사용 내역</h1>
+      <div className="flex flex-1 flex-col gap-4 p-4 bg-background">
         {/* 통계 카드 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-white shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -161,73 +202,7 @@ function HistoryPageContent() {
           </Card>
         </div>
 
-        {/* 필터 */}
-        <Card className="bg-white shadow-sm">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="기프티콘 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger>
-                  <SelectValue placeholder="월 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">전체 기간</SelectItem>
-                  {availableMonths.map((month) => (
-                    <SelectItem key={month} value={month}>
-                      {format(parseISO(month + "-01"), "yyyy년 M월", { locale: ko })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                <SelectTrigger>
-                  <SelectValue placeholder="브랜드 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">전체 브랜드</SelectItem>
-                  {availableBrands.map((brand) => (
-                    <SelectItem key={brand} value={brand}>
-                      {brand}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="상태 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">전체 상태</SelectItem>
-                  <SelectItem value="used">사용완료</SelectItem>
-                  <SelectItem value="expired">만료됨</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
-                  <SelectValue placeholder="정렬" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="registeredAt">등록일순</SelectItem>
-                  <SelectItem value="expiryDate">만료일순</SelectItem>
-                  <SelectItem value="brand">브랜드순</SelectItem>
-                  <SelectItem value="price">금액순</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        
 
         {/* 내역 목록 */}
         <div className="space-y-4">
@@ -255,141 +230,85 @@ function HistoryPageContent() {
             </div>
           </div>
 
+          {/* 필터: 헤더 바로 아래로 이동 */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="등록일 기간" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">등록일 전체 기간</SelectItem>
+                {availableMonths.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {format(parseISO(month + "-01"), "yyyy년 M월", { locale: ko })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="브랜드 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 브랜드</SelectItem>
+                {availableBrands.map((brand) => (
+                  <SelectItem key={brand} value={brand}>
+                    {brand}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="상태 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 상태</SelectItem>
+                <SelectItem value="used">사용완료</SelectItem>
+                <SelectItem value="expired">만료됨</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="정렬" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="registeredAt">등록일순</SelectItem>
+                <SelectItem value="expiryDate">만료일순</SelectItem>
+                <SelectItem value="brand">브랜드순</SelectItem>
+                <SelectItem value="price">금액순</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {filteredHistoryGifticons.length > 0 ? (
             <div
               className={
                 settings.listView === "card" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3"
               }
             >
-              {filteredHistoryGifticons.map((gifticon) => {
-                const logo = brandLogos[gifticon.brand] || "🏪"
-                const categoryInfo = categories[gifticon.category]
-                const isExpired = getDaysUntilExpiry(gifticon.expiryDate) < 0
-                const statusText = gifticon.isUsed ? "사용완료" : isExpired ? "만료됨" : "기타"
-                const statusColor = gifticon.isUsed
-                  ? "bg-gray-100 text-gray-600"
-                  : isExpired
-                    ? "bg-red-100 text-red-600"
-                    : "bg-yellow-100 text-yellow-600"
-
-                return settings.listView === "card" ? (
-                  <Card
+              {filteredHistoryGifticons.map((gifticon) => (
+                settings.listView === "card" ? (
+                  <GifticonCard
                     key={gifticon.id}
-                    className="bg-white shadow-sm opacity-80 hover:opacity-100 transition-opacity"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg">{logo}</span>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">{gifticon.brand}</p>
-                            <Badge className={categoryInfo.color + " " + categoryInfo.bgColor + " text-xs"}>
-                              {categoryInfo.label}
-                            </Badge>
-                          </div>
-                        </div>
-                        <Badge className={statusColor + " text-xs"}>{statusText}</Badge>
-                      </div>
-
-                      {gifticon.imageUrl && (
-                        <img
-                          src={gifticon.imageUrl || "/placeholder.svg"}
-                          alt={gifticon.name}
-                          className={`w-full h-24 object-cover rounded-lg mb-3 ${
-                            isExpired && !gifticon.isUsed ? "grayscale opacity-50" : "grayscale"
-                          }`}
-                        />
-                      )}
-
-                      <div className="space-y-2 mb-4">
-                        <h4 className="font-semibold text-sm leading-tight">{gifticon.name}</h4>
-                        {gifticon.price && (
-                          <p className="text-base font-bold text-gray-600">{gifticon.price.toLocaleString()}원</p>
-                        )}
-                        <p className="text-xs text-gray-500">
-                          만료일: {format(parseISO(gifticon.expiryDate), "yyyy년 M월 d일", { locale: ko })}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          등록일: {format(parseISO(gifticon.registeredAt), "yyyy년 M월 d일", { locale: ko })}
-                        </p>
-                        {gifticon.memo && <p className="text-xs text-gray-500 italic line-clamp-2">{gifticon.memo}</p>}
-                      </div>
-
-                      {gifticon.isUsed && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleUsed(gifticon.id)}
-                          className="w-full bg-transparent"
-                        >
-                          <RotateCcw className="h-3 w-3 mr-2" />
-                          사용 취소
-                        </Button>
-                      )}
-
-                      {isExpired && !gifticon.isUsed && (
-                        <div className="text-center text-xs text-red-500 py-2 bg-red-50 rounded">
-                          만료된 기프티콘입니다
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    gifticon={gifticon}
+                    onToggleUsed={toggleUsed}
+                    onView={() => setSelectedGifticon(gifticon)}
+                    disableExpiredToggle
+                  />
                 ) : (
-                  <div
+                  <GifticonListItem
                     key={gifticon.id}
-                    className="bg-white p-4 rounded-lg shadow-sm border opacity-80 hover:opacity-100 transition-opacity"
-                  >
-                    <div className="flex items-center space-x-4">
-                      {gifticon.imageUrl && (
-                        <img
-                          src={gifticon.imageUrl || "/placeholder.svg"}
-                          alt={gifticon.name}
-                          className={`w-16 h-16 object-cover rounded-md flex-shrink-0 ${
-                            isExpired && !gifticon.isUsed ? "grayscale opacity-50" : "grayscale"
-                          }`}
-                        />
-                      )}
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-base">{logo}</span>
-                          <p className="text-sm font-medium text-gray-600">{gifticon.brand}</p>
-                          <Badge className={categoryInfo.color + " " + categoryInfo.bgColor + " text-xs"}>
-                            {categoryInfo.label}
-                          </Badge>
-                          <Badge className={statusColor + " text-xs"}>{statusText}</Badge>
-                        </div>
-                        <h4 className="font-semibold text-base leading-tight truncate">{gifticon.name}</h4>
-                        <div className="flex items-center space-x-4 mt-1">
-                          {gifticon.price && (
-                            <p className="text-sm font-bold text-gray-600">{gifticon.price.toLocaleString()}원</p>
-                          )}
-                          <p className="text-xs text-gray-500">
-                            만료: {format(parseISO(gifticon.expiryDate), "yyyy.MM.dd", { locale: ko })}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            등록: {format(parseISO(gifticon.registeredAt), "yyyy.MM.dd", { locale: ko })}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex-shrink-0">
-                        {gifticon.isUsed && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleUsed(gifticon.id)}
-                            className="bg-transparent"
-                          >
-                            <RotateCcw className="h-3 w-3 mr-1" />
-                            취소
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    gifticon={gifticon}
+                    onToggleUsed={toggleUsed}
+                    onView={() => setSelectedGifticon(gifticon)}
+                    disableExpiredToggle
+                  />
                 )
-              })}
+              ))}
             </div>
           ) : (
             <Card className="bg-white shadow-sm">
@@ -406,6 +325,13 @@ function HistoryPageContent() {
           )}
         </div>
       </div>
+
+      {/* 상세 다이얼로그 */}
+      <GifticonDetailDialog
+        gifticon={selectedGifticon}
+        isOpen={!!selectedGifticon}
+        onClose={() => setSelectedGifticon(null)}
+      />
     </SidebarInset>
   )
 }

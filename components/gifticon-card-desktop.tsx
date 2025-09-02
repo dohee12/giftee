@@ -1,67 +1,244 @@
 "use client"
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Share2 } from "lucide-react"
-import { format, parseISO } from "date-fns"
-import { ko } from "date-fns/locale"
-import type { Gifticon } from "@/types/gifticon"
+import { Barcode, Edit, MoreVertical, Eye, Trash2 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { categories } from "@/constants/gifticon-categories"
-import { getExpiryStatus } from "@/utils/gifticon-data-utils"
+import { BarcodeViewer } from "./barcode-viewer"
+import { EditGifticonDialog } from "./edit-gifticon-dialog"
+import { ImageViewer } from "./image-viewer"
+import type { Gifticon } from "@/types/gifticon"
 
-interface GifticonCardProps {
+interface GifticonCardDesktopProps {
   gifticon: Gifticon
   onToggleUsed: (id: string) => void
-  onShare: (gifticon: Gifticon) => void
+  onView: (gifticon: Gifticon) => void
+  onEdit?: (gifticon: Gifticon) => void
+  onDelete?: (id: string) => void
+  isSelectMode?: boolean
+  isSelected?: boolean
+  onSelect?: (id: string) => void
 }
 
-export function GifticonCard({ gifticon, onToggleUsed, onShare }: GifticonCardProps) {
-  const category = categories[gifticon.category]
-  const CategoryIcon = category.icon
-  const expiryStatus = getExpiryStatus(gifticon.expiryDate, gifticon.isUsed)
+export function GifticonCardDesktop({
+  gifticon,
+  onToggleUsed,
+  onView,
+  onEdit,
+  onDelete,
+  isSelectMode = false,
+  isSelected = false,
+  onSelect,
+}: GifticonCardDesktopProps) {
+  const [isBarcodeOpen, setIsBarcodeOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
+
+  const categoryInfo = categories[gifticon.category as keyof typeof categories] || categories.lifestyle
+  const daysUntilExpiry = gifticon.expiryDate === "no-expiry" ? null : 
+    Math.ceil((new Date(gifticon.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(gifticon)
+    } else {
+      setIsEditOpen(true)
+    }
+  }
+
+  const handleSave = (updatedGifticon: Gifticon) => {
+    if (onEdit) {
+      onEdit(updatedGifticon)
+    }
+  }
 
   return (
-    <Card className={`cursor-pointer transition-all hover:shadow-lg ${gifticon.isUsed ? "opacity-60" : ""}`}>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-2">
-            <CategoryIcon className="h-5 w-5 text-gray-600" />
-            <Badge className={category.color}>{category.label}</Badge>
+    <>
+      <Card className="relative overflow-hidden hover:shadow-md transition-shadow">
+        {/* 선택 체크박스 */}
+        {isSelectMode && (
+          <div className="absolute top-2 left-2 z-10">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onSelect?.(gifticon.id)}
+              className="w-4 h-4 text-blue-600 bg-white border-2 border-gray-300 rounded focus:ring-blue-500"
+            />
           </div>
-          <Badge className={expiryStatus.color}>{expiryStatus.text}</Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {gifticon.imageUrl && (
-          <img
-            src={gifticon.imageUrl || "/placeholder.svg"}
-            alt={gifticon.name}
-            className="w-full h-32 object-cover rounded-md mb-3"
-          />
         )}
-        <div className="space-y-2">
-          <h3 className="font-semibold text-lg">{gifticon.name}</h3>
-          <p className="text-gray-600">{gifticon.brand}</p>
-          <p className="text-sm text-gray-500">
-            만료일: {format(parseISO(gifticon.expiryDate), "yyyy년 MM월 dd일", { locale: ko })}
-          </p>
-          {gifticon.memo && <p className="text-sm text-gray-500 italic">{gifticon.memo}</p>}
-        </div>
-        <div className="flex space-x-2 mt-4">
-          <Button
-            size="sm"
-            variant={gifticon.isUsed ? "secondary" : "default"}
-            onClick={() => onToggleUsed(gifticon.id)}
-            className="flex-1"
-          >
-            {gifticon.isUsed ? "사용취소" : "사용완료"}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => onShare(gifticon)}>
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+        <CardContent className="p-6">
+          <div className="flex space-x-6">
+            {/* 이미지 섹션 */}
+            <div className="flex-shrink-0">
+              {gifticon.imageUrl ? (
+                <div 
+                  className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setIsImageViewerOpen(true)}
+                >
+                  <img
+                    src={gifticon.imageUrl}
+                    alt={gifticon.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                  이미지 없음
+                </div>
+              )}
+            </div>
+
+            {/* 정보 섹션 */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Badge variant="secondary" className="text-sm">
+                      {gifticon.giftType === "amount" ? "금액권" : "교환권"}
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      className="text-sm"
+                      style={{ 
+                        backgroundColor: categoryInfo.color + "20", 
+                        borderColor: categoryInfo.color,
+                        color: categoryInfo.color 
+                      }}
+                    >
+                      {categoryInfo.label}
+                    </Badge>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                    {gifticon.name}
+                  </h3>
+                  <p className="text-gray-600 mb-2">
+                    {gifticon.brand}
+                  </p>
+                </div>
+                
+                {/* 헤더 액션 */}
+                <div className="flex items-center space-x-2 ml-4">
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEdit}
+                      className="h-9 w-9 p-0 hover:bg-gray-100"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onView(gifticon)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        상세보기
+                      </DropdownMenuItem>
+                      {onEdit && (
+                        <DropdownMenuItem onClick={handleEdit}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          수정
+                        </DropdownMenuItem>
+                      )}
+                      {onDelete && (
+                        <DropdownMenuItem onClick={() => onDelete(gifticon.id)} className="text-red-600">
+                          삭제
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              {/* 추가 정보 */}
+              <div className="space-y-2 mb-4">
+                {daysUntilExpiry !== null && (
+                  <div className="flex items-center space-x-3 text-sm">
+                    <span className={`font-medium ${
+                      daysUntilExpiry <= 7 ? "text-red-600" : 
+                      daysUntilExpiry <= 30 ? "text-orange-600" : "text-gray-600"
+                    }`}>
+                      {daysUntilExpiry > 0 ? `D-${daysUntilExpiry}` : "만료됨"}
+                    </span>
+                    <span className="text-gray-500">
+                      {gifticon.expiryDate}
+                    </span>
+                  </div>
+                )}
+                {gifticon.memo && (
+                  <p className="text-sm text-gray-600">
+                    {gifticon.memo}
+                  </p>
+                )}
+              </div>
+
+              {/* 액션 버튼 */}
+              <div className="flex space-x-3">
+                <Button
+                  size="sm"
+                  variant={gifticon.isUsed ? "secondary" : "default"}
+                  onClick={() => onToggleUsed(gifticon.id)}
+                  className="flex-1"
+                >
+                  {gifticon.isUsed ? "사용취소" : "사용완료"}
+                </Button>
+                {gifticon.barcode && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsBarcodeOpen(true)}
+                    title="바코드 보기"
+                    className="px-4"
+                  >
+                    <Barcode className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 이미지 뷰어 */}
+      <ImageViewer
+        imageUrl={gifticon.imageUrl || ""}
+        isOpen={isImageViewerOpen}
+        onClose={() => setIsImageViewerOpen(false)}
+        title={gifticon.name}
+      />
+
+      {/* 바코드 뷰어 */}
+      {gifticon.barcode && (
+        <BarcodeViewer
+          barcode={gifticon.barcode}
+          gifticonName={gifticon.name}
+          brand={gifticon.brand}
+          isOpen={isBarcodeOpen}
+          onClose={() => setIsBarcodeOpen(false)}
+        />
+      )}
+
+      {/* 수정 다이얼로그 */}
+      <EditGifticonDialog
+        gifticon={gifticon}
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSave={handleSave}
+      />
+    </>
   )
 }

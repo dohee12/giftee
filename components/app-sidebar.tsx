@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Gift, History, Settings, User2, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react"
+import { Gift, History, Settings, User2, ChevronUp, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react"
 
 import {
   Sidebar,
@@ -76,6 +76,14 @@ export function AppSidebar() {
                   <Link href="/history">
                     <History className="h-5 w-5" />
                     {state === "expanded" && <span>사용 내역</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/calendar"} className={state === "expanded" ? "" : "justify-center"}>
+                  <Link href="/calendar">
+                    <CalendarIcon className="h-5 w-5" />
+                    {state === "expanded" && <span>캘린더</span>}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

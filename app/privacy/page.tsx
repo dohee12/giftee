@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronLeft, Shield, Eye, Lock, Database } from "lucide-react"
+import { ArrowLeft, Shield, Eye, Lock, Database } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function PrivacyPage() {
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                <ChevronLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
               <div className="flex items-center space-x-2">
                 <Shield className="h-8 w-8 text-blue-600" />

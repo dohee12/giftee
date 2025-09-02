@@ -116,8 +116,8 @@ export function AddGifticonFormDialog({ isOpen, onClose, onAdd }: AddGifticonFor
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="p-4 border-b">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             새 기프티콘 등록
             <Button variant="ghost" size="sm" onClick={handleClose}>
@@ -126,8 +126,7 @@ export function AddGifticonFormDialog({ isOpen, onClose, onAdd }: AddGifticonFor
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 pb-24">
-        <form id="add-gifticon-form-basic" onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="manual" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="manual">수동 입력</TabsTrigger>
@@ -259,20 +258,15 @@ export function AddGifticonFormDialog({ isOpen, onClose, onAdd }: AddGifticonFor
             </TabsContent>
           </Tabs>
 
-          <div className="hidden"></div>
-        </form>
-        </div>
-
-        <div className="p-3 border-t bg-white">
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1 bg-transparent h-11">
+          <div className="flex space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={handleClose} className="flex-1 bg-transparent">
               취소
             </Button>
-            <Button type="submit" form="add-gifticon-form-basic" className="flex-1 h-11" disabled={!canSubmit}>
+            <Button type="submit" className="flex-1" disabled={!canSubmit}>
               등록하기
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
