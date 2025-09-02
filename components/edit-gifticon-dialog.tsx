@@ -178,7 +178,15 @@ export function EditGifticonDialog({ gifticon, isOpen, onClose, onSave }: EditGi
                 <Label htmlFor="category">카테고리 *</Label>
                 <Select
                   value={formData.category || ""}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  onValueChange={(value) => {
+                    // 예: 카페(카페 카테고리) 상태에서 '아트박스'(뷰티/패션/건강 등 금액권)로 변경하려 하면 금지
+                    if (formData.giftType === "exchange" && value === "beauty") {
+                      // 카페 교환권에서는 뷰티/패션/건강(아트박스 등) 금액권 카테고리를 금지
+                      alert("해당 브랜드는 선택한 카테고리와 호환되지 않습니다.")
+                      return
+                    }
+                    setFormData({ ...formData, category: value })
+                  }}
                   required
                 >
                   <SelectTrigger>

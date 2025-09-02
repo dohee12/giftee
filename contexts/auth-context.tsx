@@ -1,12 +1,18 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+
+interface AuthUser {
+  email?: string
+  name?: string
+  photoUrl?: string
+}
 
 interface AuthContextType {
   isAuthenticated: boolean
   loading: boolean
-  user: any
+  user: AuthUser | null
   login: (email: string, password: string) => Promise<void>
   logout: () => void
 }
@@ -14,42 +20,67 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // 테스트를 위해 기본값을 true로 설정
-  const [isAuthenticated, setIsAuthenticated] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState({ email: "test@example.com", name: "테스트 사용자" })
+  const [user, setUser] = useState<AuthUser | null>(null)
+
+  const readFromStorage = () => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null
+      const profileRaw = typeof window !== "undefined" ? localStorage.getItem("user_profile") : null
+      const profile: AuthUser | null = profileRaw ? JSON.parse(profileRaw) : null
+      setIsAuthenticated(!!token)
+      setUser(profile)
+    } catch {
+      setIsAuthenticated(false)
+      setUser(null)
+    }
+  }
+
+  useEffect(() => {
+    readFromStorage()
+    // 테스트용: 토큰이 없으면 도희 계정으로 자동 로그인
+    try {
+      const token = localStorage.getItem("auth_token")
+      if (!token) {
+        localStorage.setItem("auth_token", "dev_token")
+        localStorage.setItem(
+          "user_profile",
+          JSON.stringify({ email: "dohee@example.com", name: "도희", photoUrl: "/avatar-placeholder.png" }),
+        )
+        window.dispatchEvent(new Event("giftee:auth-changed"))
+      }
+    } catch {}
+    const onAuthChanged = () => readFromStorage()
+    window.addEventListener("giftee:auth-changed", onAuthChanged)
+    return () => window.removeEventListener("giftee:auth-changed", onAuthChanged)
+  }, [])
 
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
-      // 실제 로그인 로직은 나중에 구현
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setIsAuthenticated(true)
-      setUser({ email, name: "사용자" })
-      localStorage.setItem("auth_token", "test_token")
-    } catch (error) {
-      throw error
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      localStorage.setItem("auth_token", "dev_token")
+      localStorage.setItem(
+        "user_profile",
+        JSON.stringify({ email, name: email.split("@")[0], photoUrl: "/avatar-placeholder.png" }),
+      )
+      window.dispatchEvent(new Event("giftee:auth-changed"))
     } finally {
       setLoading(false)
     }
   }
 
   const logout = () => {
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("user_profile")
     setIsAuthenticated(false)
     setUser(null)
-    localStorage.removeItem("auth_token")
+    window.dispatchEvent(new Event("giftee:auth-changed"))
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        loading,
-        user,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ isAuthenticated, loading, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

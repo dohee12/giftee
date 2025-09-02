@@ -42,7 +42,7 @@ export function GifticonCardDesktop({
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
 
-  const categoryInfo = categories[gifticon.category as keyof typeof categories] || categories.lifestyle
+  const categoryInfo = categories[gifticon.category] || categories.lifestyle
   const daysUntilExpiry = gifticon.expiryDate === "no-expiry" ? null : 
     Math.ceil((new Date(gifticon.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
 
@@ -107,12 +107,7 @@ export function GifticonCardDesktop({
                     </Badge>
                     <Badge 
                       variant="outline" 
-                      className="text-sm"
-                      style={{ 
-                        backgroundColor: categoryInfo.color + "20", 
-                        borderColor: categoryInfo.color,
-                        color: categoryInfo.color 
-                      }}
+                      className={`text-sm ${categoryInfo.bgColor} ${categoryInfo.color}`}
                     >
                       {categoryInfo.label}
                     </Badge>

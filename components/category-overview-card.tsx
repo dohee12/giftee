@@ -26,24 +26,24 @@ export function CategoryCard({ category, brands, onClick }: CategoryCardProps) {
 
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 ${categoryInfo.bgColor} border-2`}
+      className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 bg-white border-2`}
       onClick={onClick}
     >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className={`p-3 rounded-full bg-white shadow-sm`}>
-              <Icon className={`h-8 w-8 ${categoryInfo.color}`} />
+            <div className={`p-3 rounded-full bg-transparent`}>
+              <Icon className={`h-8 w-8 text-gray-700`} />
             </div>
             <div>
-              <h3 className={`text-xl font-bold ${categoryInfo.color}`}>{categoryInfo.label}</h3>
+              <h3 className={`text-xl font-bold text-gray-900`}>{categoryInfo.label}</h3>
               <p className="text-sm text-gray-600 mt-1">
                 {brands.length}개 브랜드 · {unusedCount}개 사용가능
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <ChevronRight className={`h-6 w-6 ${categoryInfo.color}`} />
+            <ChevronRight className={`h-6 w-6 text-gray-400`} />
           </div>
         </div>
       </CardContent>

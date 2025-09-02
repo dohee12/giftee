@@ -1,100 +1,131 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Gift, Mail, Lock, User, Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Gift,
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function SignupPage() {
-  const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-  })
+  });
   const [agreements, setAgreements] = useState({
     terms: false,
     privacy: false,
     marketing: false,
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const validatePassword = (password: string) => {
-    const minLength = password.length >= 8
-    const hasNumber = /\d/.test(password)
-    const hasLetter = /[a-zA-Z]/.test(password)
-    return { minLength, hasNumber, hasLetter, valid: minLength && hasNumber && hasLetter }
-  }
+    const minLength = password.length >= 8;
+    const hasNumber = /\d/.test(password);
+    const hasLetter = /[a-zA-Z]/.test(password);
+    return {
+      minLength,
+      hasNumber,
+      hasLetter,
+      valid: minLength && hasNumber && hasLetter,
+    };
+  };
 
-  const passwordValidation = validatePassword(formData.password)
+  const passwordValidation = validatePassword(formData.password);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     // 유효성 검사
     if (!formData.name.trim()) {
-      setError("이름을 입력해주세요.")
-      return
+      setError("이름을 입력해주세요.");
+      return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError("올바른 이메일 형식을 입력해주세요.")
-      return
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return;
     }
 
     if (!passwordValidation.valid) {
-      setError("비밀번호는 8자 이상이며, 숫자와 문자를 포함해야 합니다.")
-      return
+      setError("비밀번호는 8자 이상이며, 숫자와 문자를 포함해야 합니다.");
+      return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.")
-      return
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
     }
 
     if (!agreements.terms || !agreements.privacy) {
-      setError("필수 약관에 동의해주세요.")
-      return
+      setError("필수 약관에 동의해주세요.");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
+
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      formData.email,
+      formData.password
+    );
+
+    await updateProfile(userCredential.user, {
+      displayName: formData.name,
+    });
+
+    alert("회원가입한 \n 사용자 닉네임은 : " + userCredential.user.displayName);
 
     // 임시 회원가입 처리
     setTimeout(() => {
-      setIsLoading(false)
-      router.push("/onboarding")
-    }, 2000)
-  }
+      setIsLoading(false);
+      router.push("/onboarding");
+    }, 2000);
+  };
 
   const handleSocialSignup = (provider: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
     setTimeout(() => {
-      router.push("/onboarding")
-    }, 1000)
-  }
+      router.push("/onboarding");
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* 로고 */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center space-x-2 mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center space-x-2 mb-4"
+          >
             <Gift className="h-10 w-10 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">기프티콘 모음북</span>
+            <span className="text-2xl font-bold text-gray-900">Giftee</span>
           </Link>
           <p className="text-gray-600">새 계정을 만들어보세요</p>
         </div>
@@ -102,13 +133,17 @@ export default function SignupPage() {
         <Card className="shadow-xl border-0">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-center text-2xl">회원가입</CardTitle>
-            <p className="text-center text-sm text-gray-600">몇 가지 정보만 입력하면 완료됩니다</p>
+            <p className="text-center text-sm text-gray-600">
+              몇 가지 정보만 입력하면 완료됩니다
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" />
-                <AlertDescription className="text-red-800">{error}</AlertDescription>
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -121,7 +156,9 @@ export default function SignupPage() {
                     id="name"
                     placeholder="홍길동"
                     value={formData.name}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    }
                     className="pl-10 h-11"
                     disabled={isLoading}
                     required
@@ -138,7 +175,12 @@ export default function SignupPage() {
                     type="email"
                     placeholder="example@email.com"
                     value={formData.email}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     className="pl-10 h-11"
                     disabled={isLoading}
                     required
@@ -155,7 +197,12 @@ export default function SignupPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="8자 이상, 숫자+문자 포함"
                     value={formData.password}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
                     className="pl-10 pr-10 h-11"
                     disabled={isLoading}
                     required
@@ -168,13 +215,21 @@ export default function SignupPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 {formData.password && (
                   <div className="space-y-1 text-xs">
                     <div
-                      className={`flex items-center space-x-1 ${passwordValidation.minLength ? "text-green-600" : "text-red-600"}`}
+                      className={`flex items-center space-x-1 ${
+                        passwordValidation.minLength
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {passwordValidation.minLength ? (
                         <CheckCircle className="h-3 w-3" />
@@ -184,7 +239,11 @@ export default function SignupPage() {
                       <span>8자 이상</span>
                     </div>
                     <div
-                      className={`flex items-center space-x-1 ${passwordValidation.hasNumber ? "text-green-600" : "text-red-600"}`}
+                      className={`flex items-center space-x-1 ${
+                        passwordValidation.hasNumber
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {passwordValidation.hasNumber ? (
                         <CheckCircle className="h-3 w-3" />
@@ -194,7 +253,11 @@ export default function SignupPage() {
                       <span>숫자 포함</span>
                     </div>
                     <div
-                      className={`flex items-center space-x-1 ${passwordValidation.hasLetter ? "text-green-600" : "text-red-600"}`}
+                      className={`flex items-center space-x-1 ${
+                        passwordValidation.hasLetter
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       {passwordValidation.hasLetter ? (
                         <CheckCircle className="h-3 w-3" />
@@ -216,7 +279,12 @@ export default function SignupPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="비밀번호를 다시 입력하세요"
                     value={formData.confirmPassword}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        confirmPassword: e.target.value,
+                      }))
+                    }
                     className="pl-10 pr-10 h-11"
                     disabled={isLoading}
                     required
@@ -229,13 +297,19 @@ export default function SignupPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     disabled={isLoading}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 {formData.confirmPassword && (
                   <div
                     className={`text-xs flex items-center space-x-1 ${
-                      formData.password === formData.confirmPassword ? "text-green-600" : "text-red-600"
+                      formData.password === formData.confirmPassword
+                        ? "text-green-600"
+                        : "text-red-600"
                     }`}
                   >
                     {formData.password === formData.confirmPassword ? (
@@ -258,11 +332,20 @@ export default function SignupPage() {
                   <Checkbox
                     id="terms"
                     checked={agreements.terms}
-                    onCheckedChange={(checked) => setAgreements((prev) => ({ ...prev, terms: checked as boolean }))}
+                    onCheckedChange={(checked) =>
+                      setAgreements((prev) => ({
+                        ...prev,
+                        terms: checked as boolean,
+                      }))
+                    }
                     disabled={isLoading}
                   />
                   <Label htmlFor="terms" className="text-sm leading-5">
-                    <Link href="/terms" className="text-blue-600 hover:underline" target="_blank">
+                    <Link
+                      href="/terms"
+                      className="text-blue-600 hover:underline"
+                      target="_blank"
+                    >
                       이용약관
                     </Link>
                     에 동의합니다 <span className="text-red-500">*</span>
@@ -273,11 +356,20 @@ export default function SignupPage() {
                   <Checkbox
                     id="privacy"
                     checked={agreements.privacy}
-                    onCheckedChange={(checked) => setAgreements((prev) => ({ ...prev, privacy: checked as boolean }))}
+                    onCheckedChange={(checked) =>
+                      setAgreements((prev) => ({
+                        ...prev,
+                        privacy: checked as boolean,
+                      }))
+                    }
                     disabled={isLoading}
                   />
                   <Label htmlFor="privacy" className="text-sm leading-5">
-                    <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank">
+                    <Link
+                      href="/privacy"
+                      className="text-blue-600 hover:underline"
+                      target="_blank"
+                    >
                       개인정보처리방침
                     </Link>
                     에 동의합니다 <span className="text-red-500">*</span>
@@ -288,7 +380,12 @@ export default function SignupPage() {
                   <Checkbox
                     id="marketing"
                     checked={agreements.marketing}
-                    onCheckedChange={(checked) => setAgreements((prev) => ({ ...prev, marketing: checked as boolean }))}
+                    onCheckedChange={(checked) =>
+                      setAgreements((prev) => ({
+                        ...prev,
+                        marketing: checked as boolean,
+                      }))
+                    }
                     disabled={isLoading}
                   />
                   <Label htmlFor="marketing" className="text-sm leading-5">
@@ -297,7 +394,11 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-11" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-11"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -342,7 +443,10 @@ export default function SignupPage() {
 
             <div className="text-center text-sm">
               <span className="text-gray-600">이미 계정이 있으신가요? </span>
-              <Link href="/auth/login" className="text-blue-600 hover:underline font-medium">
+              <Link
+                href="/auth/login"
+                className="text-blue-600 hover:underline font-medium"
+              >
                 로그인
               </Link>
             </div>
@@ -356,5 +460,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

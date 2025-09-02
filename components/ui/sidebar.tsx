@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH_MOBILE = "16rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -152,22 +152,49 @@ const Sidebar = React.forwardRef<
   }
 
   if (isMobile) {
+    const mobileState = openMobile ? "expanded" : "collapsed"
     return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetContent
-          data-sidebar="sidebar"
-          data-mobile="true"
-          className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
-          side={side}
+      <div
+        ref={ref}
+        className={cn("group peer block text-sidebar-foreground", className)}
+        data-state={mobileState}
+        data-collapsible={mobileState === "collapsed" ? collapsible : ""}
+        data-variant={variant}
+        data-side={side}
+        {...props}
+      >
+        {/* 모바일에서는 gap handler가 필요 없으므로 제거하여 본문을 밀지 않음 */}
+
+        {/* background overlay when open on mobile */}
+        {openMobile && (
+          <div
+            className="fixed inset-0 z-20 bg-black/30"
+            onClick={() => setOpenMobile(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        <div
+          className={cn(
+            "duration-200 fixed inset-y-0 z-30 flex h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear",
+            side === "left"
+              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            // Adjust the padding for floating and inset variants.
+            variant === "floating" || variant === "inset"
+              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
+              : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
+          )}
+          style={{ "--sidebar-width": SIDEBAR_WIDTH } as React.CSSProperties}
         >
-          <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
-      </Sheet>
+          <div
+            data-sidebar="sidebar"
+            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+          >
+            {children}
+          </div>
+        </div>
+      </div>
     )
   }
 

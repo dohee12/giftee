@@ -1,16 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
+import { SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar"
 import { categories as categoryMeta } from "@/constants/gifticon-categories"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Plus, Search, Bell, Gift, Grid, List, ChevronLeft } from "lucide-react"
+import { Plus, Search, Bell, Gift, Grid, List, ChevronLeft, ChevronRight } from "lucide-react"
 import { useGifticons } from "@/hooks/use-gifticon-data"
 import { useSettings } from "@/hooks/use-app-settings"
 import { CategoryCard } from "@/components/category-overview-card"
@@ -26,19 +26,22 @@ import type { Gifticon } from "@/types/gifticon"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAIRecommendations } from "@/hooks/use-ai-recommendations"
 import { AIRecommendationAlert } from "@/components/ai-recommendation-alert"
+import { useAuth } from "@/contexts/auth-context"
 
 type ViewMode = "categories" | "brands" | "gifticons"
 
 function BrandGifticonManagerContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlQuery = searchParams?.get("q") ?? ""
   const { gifticons, notifications, brandsByCategory, addGifticon, toggleUsed, deleteGifticon, updateGifticon, getGifticonsByBrand } =
     useGifticons()
   const { settings, updateSetting } = useSettings()
   const isMobile = useIsMobile()
+  const { isAuthenticated, user, logout } = useAuth()
+  const { toggleSidebar, openMobile, state } = useSidebar()
 
   const { recommendations } = useAIRecommendations(gifticons)
-
-
 
   const [viewMode, setViewMode] = useState<ViewMode>("categories")
   const [selectedCategory, setSelectedCategory] = useState<string>("")
@@ -53,15 +56,6 @@ function BrandGifticonManagerContent() {
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
   const [dismissedRecommendationIds, setDismissedRecommendationIds] = useState<Set<string>>(new Set())
   const [expiringOnly, setExpiringOnly] = useState(false)
-
-  // AI 추천 디버깅
-  useEffect(() => {
-    console.log("=== AI 추천 디버깅 ===")
-    console.log("전체 추천:", recommendations)
-    console.log("거부된 추천 ID:", Array.from(dismissedRecommendationIds))
-    console.log("표시될 추천:", recommendations.filter(r => !dismissedRecommendationIds.has(r.id)))
-    console.log("=== AI 추천 디버깅 끝 ===")
-  }, [recommendations, dismissedRecommendationIds])
   const isSearchActive = searchTerm.trim() !== ""
   const scopeLabel = isSearchActive
     ? "검색결과"
@@ -70,6 +64,11 @@ function BrandGifticonManagerContent() {
     : !showUsedFilter
     ? "미사용 기프티콘"
     : "전체 기프티콘"
+
+  useEffect(() => {
+    // URL 쿼리(q)와 검색어 동기화
+    setSearchTerm(urlQuery)
+  }, [urlQuery])
 
   const handleLogoClick = () => {
     setViewMode("categories")
@@ -80,6 +79,15 @@ function BrandGifticonManagerContent() {
     setShowUsedFilter(false)
     setExpiringOnly(false)
   }
+
+  // 사이드바의 "기프티콘 관리" 클릭 시 메인 초기화와 동일하게 동작하도록 이벤트 수신
+  useEffect(() => {
+    const onGoHome = () => {
+      handleLogoClick()
+    }
+    window.addEventListener("giftee:go-home", onGoHome as EventListener)
+    return () => window.removeEventListener("giftee:go-home", onGoHome as EventListener)
+  }, [])
 
   const brandStats = getBrandStats(gifticons)
 
@@ -128,6 +136,7 @@ function BrandGifticonManagerContent() {
   }
 
   const handleAddClick = () => {
+    // 로그인 없이도 기프티콘 추가 가능
     setIsAddDialogOpen(true)
   }
 
@@ -222,40 +231,41 @@ function BrandGifticonManagerContent() {
     ).values(),
   ).length
 
-  // 검색 입력 시 자동으로 기프티콘 목록 보기로 전환
-  useEffect(() => {
-    if (searchTerm.trim() !== "") {
-      setViewMode("gifticons")
-      setSelectedBrand("")
-      setSelectedCategory("")
-      setSelectedCategoryFilter("all")
-      setShowUsedFilter(false)
-      setExpiringOnly(false)
-    }
-  }, [searchTerm])
-
-
-
   return (
     <SidebarInset>
       {/* 헤더 */}
-      <header className="relative flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+      <header className="relative flex h-16 shrink-0 items-center gap-2 border-b px-2 md:px-4 bg-white">
         <div className="flex items-center space-x-4 flex-1">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            {/* 모바일: PC 사이드바 스타일의 토글 버튼 (그라데이션 상자 + >/<) */}
+            <button
+              onClick={toggleSidebar}
+              aria-label="사이드바 토글"
+              className="md:hidden inline-flex items-center justify-center"
+            >
+              <div className="group/icon relative w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <span className="text-white text-base font-ydsnow font-black">G</span>
+                {(isMobile ? openMobile : state !== "collapsed") ? (
+                  <ChevronLeft className="pointer-events-none absolute inset-0 m-auto h-4 w-4 text-white opacity-0 transition-opacity duration-150 group-hover/icon:opacity-100" />
+                ) : (
+                  <ChevronRight className="pointer-events-none absolute inset-0 m-auto h-4 w-4 text-white opacity-0 transition-opacity duration-150 group-hover/icon:opacity-100" />
+                )}
+              </div>
+            </button>
             <button onClick={handleLogoClick} aria-label="홈으로" className="cursor-pointer">
-              <h1 className="text-lg font-bold text-gray-900 font-logo">Giftee</h1>
+              <h1 className="text-xl font-black text-gray-900 font-ydsnow">Giftee</h1>
             </button>
           </div>
 
           {/* 검색바 */}
-          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center w-full max-w-md z-10 pointer-events-none">
-            <div className="relative w-full pointer-events-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="flex-1 flex justify-center px-2">
+            <div className="relative w-full max-w-[18rem] md:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="기프티콘 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-9"
               />
             </div>
           </div>
@@ -263,43 +273,70 @@ function BrandGifticonManagerContent() {
 
         <div className="flex items-center space-x-2">
           {/* 알림 */}
-          {settings.expiryNotification && notifications.length > 0 && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="p-2 relative">
-                  <Bell className="h-5 w-5 text-gray-600" />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2 relative">
+                <Bell className="h-5 w-5 text-gray-600" />
+                {settings.expiryNotification && notifications.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                     {notifications.length}
                   </span>
-                </Button>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-0">
+              {settings.expiryNotification && notifications.length > 0 ? (
+                <>
+                  <div className="p-2 text-xs text-amber-700 bg-amber-50">⏰ 곧 만료되는 기프티콘이 {notifications.length}개 있어요.</div>
+                  <div className="max-h-64 overflow-auto divide-y">
+                    {notifications.slice(0, 10).map((g) => (
+                      <div key={g.id} className="p-3 text-sm">
+                        <div className="font-medium text-gray-900 truncate">{g.brand} {g.name}</div>
+                        <div className="text-xs text-gray-600">{getDaysUntilExpiry(g.expiryDate)}일 남음 · {g.expiryDate}</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  <Bell className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p>알림이 없습니다</p>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* 로그인/아바타 */}
+          {!isAuthenticated ? (
+            <Link href="/auth/login">
+              <Button variant="ghost" size="sm">로그인</Button>
+            </Link>
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button aria-label="계정" className="h-8 w-8 rounded-full overflow-hidden border">
+                  <img
+                    src={user?.photoUrl || "/avatar-placeholder.png"}
+                    alt={user?.name || "user"}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-72 p-0">
-                <div className="p-2 text-xs text-amber-700 bg-amber-50">⏰ 곧 만료되는 기프티콘이 {notifications.length}개 있어요.</div>
-                <div className="max-h-64 overflow-auto divide-y">
-                  {notifications.slice(0, 10).map((g) => (
-                    <div key={g.id} className="p-3 text-sm">
-                      <div className="font-medium text-gray-900 truncate">{g.brand} {g.name}</div>
-                      <div className="text-xs text-gray-600">{getDaysUntilExpiry(g.expiryDate)}일 남음 · {g.expiryDate}</div>
-                    </div>
-                  ))}
+              <PopoverContent align="end" className="w-56 p-0">
+                <div className="px-4 py-3 border-b">
+                  <p className="text-sm font-medium text-gray-900 truncate">안녕하세요, {user?.name || "사용자"}님</p>
+                </div>
+                <div className="p-2">
+                  <Button variant="outline" className="w-full" onClick={logout}>로그아웃</Button>
                 </div>
               </PopoverContent>
             </Popover>
           )}
-
-          
-
-          {/* 로그인 버튼 (우측 끝) */}
-          <Link href="/auth/login">
-            <Button variant="ghost" size="sm">
-              로그인
-            </Button>
-          </Link>
           {/* 추가 버튼 (헤더에서 제거: FAB로 대체) */}
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4 bg-background">
+      <div className="flex flex-1 flex-col gap-4 p-4 bg-gray-50">
         {/* 만료 알림 - 항상 맨 위에 표시 */}
         {settings.expiryNotification && notifications.length > 0 && (
           <Alert className="border-yellow-200 bg-yellow-50">
@@ -331,23 +368,6 @@ function BrandGifticonManagerContent() {
             onUseGifticon={handleUseGifticon}
           />
         ))}
-
-        {/* AI 추천이 없을 때 테스트 버튼 */}
-        {recommendations.length === 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-blue-800 mb-2">AI 추천이 생성되지 않았습니다.</p>
-            <p className="text-blue-600 text-sm mb-3">
-              사용 가능한 기프티콘이 2개 이상 있어야 AI 추천이 생성됩니다.
-            </p>
-            <div className="text-blue-600 text-sm">
-              <p>• 전체 기프티콘: {gifticons.length}개</p>
-              <p>• 사용 가능한 기프티콘: {gifticons.filter(g => !g.isUsed && getDaysUntilExpiry(g.expiryDate) >= 0).length}개</p>
-              <p>• AI 추천 수: {recommendations.length}개</p>
-            </div>
-          </div>
-        )}
-
-
 
         {/* 카테고리 개요 */}
         {viewMode === "categories" && (
@@ -448,7 +468,7 @@ function BrandGifticonManagerContent() {
         {viewMode === "gifticons" && (
           <>
             <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
                 {isSearchActive ? (
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-xl font-bold text-gray-900">검색결과</h2>
@@ -487,7 +507,7 @@ function BrandGifticonManagerContent() {
                     )}
                   </div>
                 )}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 md:justify-end w-full md:w-auto">
                   {/* 일괄 수정 버튼 */}
                   <Button 
                     variant={isSelectMode ? "default" : "outline"} 

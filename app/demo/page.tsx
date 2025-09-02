@@ -116,7 +116,7 @@ export default function DemoPage() {
               </Button>
               <div className="flex items-center space-x-2">
                 <Gift className="h-8 w-8 text-blue-600" />
-                <span className="text-xl font-bold text-gray-900">기프티콘 모음북</span>
+                <span className="text-xl font-bold text-gray-900">Giftee</span>
                 <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 animate-pulse">🚀 DEMO</Badge>
               </div>
             </div>

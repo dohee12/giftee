@@ -2,12 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Yeongdeok Snow Crab font (Noonnu CDN) */
+@font-face {
+  font-family: 'YeongdeokSnowCrab';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2301-2@1.0/YeongdeokSnowCrab.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
+.font-ydsnow {
+  font-family: 'YeongdeokSnowCrab', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Helvetica Neue, Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
+}
+
+/* Logo font (optional local font) */
+@font-face {
+  font-family: "GifteeLogo";
+  src: url("/fonts/GifteeLogo.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.font-logo {
+  font-family: "GifteeLogo", inherit;
+}
+
+/* ExpiryHighlight font (optional local font for expiry label) */
 @font-face {
   font-family: "ExpiryHighlight";
   src: url("/fonts/ExpiryHighlight.woff2") format("woff2");
@@ -19,6 +39,11 @@
   font-family: "ExpiryHighlight", inherit;
 }
 
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
 
 @layer base {
   :root {
@@ -28,19 +53,19 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 37 100% 66%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 37 100% 88%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 37 100% 66%;
+    --ring: 0 0% 3.9%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -99,30 +124,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Logo font (place your font file at /public/fonts/GifteeLogo.woff2) */
-@font-face {
-  font-family: "GifteeLogo";
-  src: url("/fonts/GifteeLogo.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Utility to apply the logo font to the Giftee text */
-.font-logo {
-  font-family: "GifteeLogo", inherit;
-}
-
-/* Expiry label font */
-@font-face {
-  font-family: "ExpiryHighlight";
-  src: url("/fonts/ExpiryHighlight.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-.font-expiry {
-  font-family: "ExpiryHighlight", inherit;
 }

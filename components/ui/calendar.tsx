@@ -95,7 +95,7 @@ function Calendar({
           defaultClassNames.weekday
         ),
         week: cn(
-          'relative flex w-full mt-0 after:content-["\""] after:absolute after:left-0 after:right-0 after:top-[33px] after:border-t after:border-border first:after:hidden',
+          'relative flex w-full mt-0',
           defaultClassNames.week
         ),
         week_number_header: cn(
@@ -225,8 +225,8 @@ function CalendarDayButton({
     >
       <span className="relative z-10 pointer-events-none">{props.children}</span>
       {badgeText ? (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-52px] w-[88%] h-4 rounded bg-rose-200 text-rose-800 text-[10px] leading-4 text-center truncate px-1 pointer-events-none">
-          {badgeText}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-2px] pointer-events-none">
+          <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-rose-500"></span>
         </div>
       ) : null}
     </Button>

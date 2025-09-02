@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Barcode, Edit, MoreVertical, Eye, Trash2 } from "lucide-react"
+import { Barcode, Edit, MoreVertical, Eye, Trash2, Share2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import { BarcodeViewer } from "./barcode-viewer"
 import { EditGifticonDialog } from "./edit-gifticon-dialog"
 import { ImageViewer } from "./image-viewer"
 import type { Gifticon } from "@/types/gifticon"
+import { useToast } from "@/hooks/use-toast"
 
 interface GifticonCardProps {
   gifticon: Gifticon
@@ -27,6 +28,7 @@ interface GifticonCardProps {
   isSelected?: boolean
   onSelect?: (id: string) => void
   disableExpiredToggle?: boolean
+  preferUsedStatus?: boolean
 }
 
 export function GifticonCard({
@@ -39,10 +41,12 @@ export function GifticonCard({
   isSelected = false,
   onSelect,
   disableExpiredToggle = false,
+  preferUsedStatus = false,
 }: GifticonCardProps) {
   const [isBarcodeOpen, setIsBarcodeOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
+  const { toast } = useToast()
 
   const categoryInfo = categories[gifticon.category] || categories.lifestyle
   const daysUntilExpiry = gifticon.expiryDate === "no-expiry" ? null : 
@@ -51,6 +55,19 @@ export function GifticonCard({
 
   const handleEdit = () => {
     setIsEditOpen(true)
+  }
+
+  const handleShare = async () => {
+    const text = `${gifticon.brand} - ${gifticon.name}\n바코드: ${gifticon.barcode || "없음"}\n유효기간: ${gifticon.expiryDate || "없음"}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Giftee", text })
+        toast({ title: "공유", description: "공유 창이 열렸습니다." })
+      } else {
+        await navigator.clipboard.writeText(text)
+        toast({ title: "복사 완료", description: "기프티콘 정보가 복사되었습니다." })
+      }
+    } catch {}
   }
 
   const handleSave = (updatedGifticon: Gifticon) => {
@@ -106,12 +123,7 @@ export function GifticonCard({
                     </Badge>
                     <Badge 
                       variant="outline" 
-                      className="text-xs"
-                      style={{ 
-                        backgroundColor: categoryInfo.color + "20", 
-                        borderColor: categoryInfo.color,
-                        color: categoryInfo.color 
-                      }}
+                      className={`text-xs ${categoryInfo.bgColor} ${categoryInfo.color}`}
                     >
                       {categoryInfo.label}
                     </Badge>
@@ -137,6 +149,10 @@ export function GifticonCard({
                         <Eye className="h-4 w-4 mr-2" />
                         상세보기
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleShare}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        공유
+                      </DropdownMenuItem>
                       {onEdit && (
                         <DropdownMenuItem onClick={handleEdit}>
                           <Edit className="h-4 w-4 mr-2" />
@@ -155,19 +171,24 @@ export function GifticonCard({
 
               {/* 추가 정보 */}
               <div className="space-y-1 mb-3">
-                {daysUntilExpiry !== null && (
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className={`font-medium ${
-                      daysUntilExpiry <= 7 ? "text-red-600" : 
-                      daysUntilExpiry <= 30 ? "text-orange-600" : "text-gray-600"
-                    }`}>
-                      {daysUntilExpiry > 0 ? `D-${daysUntilExpiry}` : "만료됨"}
-                    </span>
-                    <span className="text-gray-500">
-                      {gifticon.expiryDate}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  const show = daysUntilExpiry !== null || (preferUsedStatus && gifticon.isUsed)
+                  if (!show) return null
+                  const statusText = preferUsedStatus && gifticon.isUsed
+                    ? "사용함"
+                    : (daysUntilExpiry! > 0 ? `D-${daysUntilExpiry}` : "만료됨")
+                  const statusClass = preferUsedStatus && gifticon.isUsed
+                    ? "text-green-600"
+                    : (daysUntilExpiry! <= 7 ? "text-red-600" : daysUntilExpiry! <= 30 ? "text-orange-600" : "text-gray-600")
+                  return (
+                    <div className="flex items-center space-x-2 text-sm">
+                      <span className={`font-medium ${statusClass}`}>{statusText}</span>
+                      {gifticon.expiryDate && (
+                        <span className="text-gray-500">{gifticon.expiryDate}</span>
+                      )}
+                    </div>
+                  )
+                })()}
                 {gifticon.memo && (
                   <p className="text-sm text-gray-600 truncate">
                     {gifticon.memo}

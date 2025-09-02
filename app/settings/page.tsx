@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
+import { SidebarTrigger, SidebarInset, useSidebar } from "@/components/ui/sidebar"
 import {
   ChevronRight,
   Share2,
@@ -18,6 +18,8 @@ import {
   SettingsIcon,
   Palette,
   Bell,
+  Gift,
+  ChevronLeft as ChevronLeftIcon,
   Zap,
   Sparkles,
   User2,
@@ -31,12 +33,18 @@ import { DEFAULT_EMOJI_OPTIONS } from "@/constants/emoji-options"
 import { useSettings, type ListView, type SortBy, type SortOrder } from "@/hooks/use-app-settings"
 import { useRouter } from "next/navigation"
 import { LayoutWrapper } from "@/components/layout-wrapper"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useAuth } from "@/contexts/auth-context"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 function SettingsPageContent() {
   const { settings, updateSetting } = useSettings()
   const router = useRouter()
   const [isEmojiDialogOpen, setIsEmojiDialogOpen] = useState(false)
   const { notifications } = useGifticons()
+  const { isAuthenticated, user, logout } = useAuth()
+  const { toggleSidebar, openMobile, state } = useSidebar()
+  const isMobile = useIsMobile()
 
   const navItems = [
     { id: "display", label: "화면 표시", icon: Palette },
@@ -144,56 +152,113 @@ function SettingsPageContent() {
     <>
     <SidebarInset>
       {/* 헤더 */}
-      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b px-2 md:px-4 bg-white">
         <div className="flex items-center space-x-4 flex-1">
           <div className="flex items-center space-x-3">
+            {/* 모바일: PC 사이드바 스타일의 토글 버튼 */}
+            <button
+              onClick={toggleSidebar}
+              aria-label="사이드바 토글"
+              className="md:hidden inline-flex items-center justify-center"
+            >
+              <div className="group/icon relative w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Gift className="h-4 w-4 text-white transition-opacity duration-150 group-hover/icon:opacity-0" />
+                {(isMobile ? openMobile : state !== "collapsed") ? (
+                  <ChevronLeftIcon className="pointer-events-none absolute inset-0 m-auto h-4 w-4 text-white opacity-0 transition-opacity duration-150 group-hover/icon:opacity-100" />
+                ) : (
+                  <ChevronRight className="pointer-events-none absolute inset-0 m-auto h-4 w-4 text-white opacity-0 transition-opacity duration-150 group-hover/icon:opacity-100" />
+                )}
+              </div>
+            </button>
             <Link href="/">
-              <h1 className="text-lg font-bold text-gray-900 cursor-pointer">Giftee</h1>
+              <h1 className="text-xl font-black text-gray-900 cursor-pointer font-ydsnow">Giftee</h1>
             </Link>
           </div>
+          {/* 설정 페이지: 검색창 제거 */}
         </div>
 
         <div className="flex items-center space-x-2">
-          {settings.expiryNotification && notifications.length > 0 && (
-            <div className="relative">
-              <Button variant="ghost" size="sm" className="p-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2 relative">
                 <Bell className="h-5 w-5 text-gray-600" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {notifications.length}
-                </span>
+                {settings.expiryNotification && notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
               </Button>
-            </div>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-0">
+              {settings.expiryNotification && notifications.length > 0 ? (
+                <>
+                  <div className="p-2 text-xs text-amber-700 bg-amber-50">⏰ 곧 만료되는 기프티콘이 {notifications.length}개 있어요.</div>
+                  <div className="max-h-64 overflow-auto divide-y">
+                    {notifications.slice(0, 10).map((g) => (
+                      <div key={g.id} className="p-3 text-sm">
+                        <div className="font-medium text-gray-900 truncate">{g.brand} {g.name}</div>
+                        <div className="text-xs text-gray-600">{g.expiryDate}</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 text-center text-gray-500">
+                  <Bell className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p>알림이 없습니다</p>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+          {!isAuthenticated ? (
+            <Link href="/auth/login">
+              <Button variant="ghost" size="sm">로그인</Button>
+            </Link>
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button aria-label="계정" className="h-8 w-8 rounded-full overflow-hidden border">
+                  <img src={user?.photoUrl || "/avatar-placeholder.png"} alt={user?.name || "user"} className="h-full w-full object-cover" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-0">
+                <div className="px-4 py-3 border-b">
+                  <p className="text-sm font-medium text-gray-900 truncate">안녕하세요, {user?.name || "사용자"}님</p>
+                </div>
+                <div className="p-2">
+                  <Button variant="outline" className="w-full" onClick={logout}>로그아웃</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
-          <Link href="/auth/login">
-            <Button variant="ghost" size="sm">
-              로그인
-            </Button>
-          </Link>
         </div>
       </header>
 
-      <div className="flex flex-1 p-4 bg-gray-50">
-        {/* 왼쪽 네비게이션 */}
-        <aside className="w-56 sticky top-16 h-[calc(100vh-4rem)] overflow-auto self-start pt-4 px-4">
-          <div className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => scrollToSection(item.id as keyof typeof sectionRefs)}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-left hover:bg-gray-100 text-gray-700"
-                >
-                  <Icon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </aside>
+      <div className="flex flex-1 p-3 md:p-4 bg-gray-50">
+        {/* 왼쪽 네비게이션: 모바일에서는 공간 확보를 위해 숨김 */}
+        {!isMobile && (
+          <aside className="w-56 sticky top-16 h-[calc(100vh-4rem)] overflow-auto self-start pt-4 px-4">
+            <div className="space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id as keyof typeof sectionRefs)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-left hover:bg-gray-100 text-gray-700"
+                  >
+                    <Icon className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </aside>
+        )}
 
         {/* 본문 섹션 */}
         <div className="max-w-3xl mx-auto w-full">
+          
           <div className="py-4 -mt-2">
             <h1 className="text-2xl font-bold text-gray-900">설정</h1>
           </div>
@@ -208,7 +273,7 @@ function SettingsPageContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">기프티콘 리스트 형태</Label>
                   <p className="text-sm text-gray-500 mt-1">카드형 또는 리스트형으로 표시 방식을 선택할 수 있습니다.</p>
@@ -216,7 +281,7 @@ function SettingsPageContent() {
                 <RadioGroup
                   value={settings.listView}
                   onValueChange={(value: ListView) => updateSetting("listView", value)}
-                  className="flex space-x-4"
+                  className="flex flex-col gap-2 md:flex-row md:space-x-4 md:gap-0"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="card" id="card-view" />
@@ -229,7 +294,7 @@ function SettingsPageContent() {
                 </RadioGroup>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">바코드 밝기 최적화</Label>
                   <p className="text-sm text-gray-500 mt-1">바코드를 더 밝게 표시하여 스캔 인식률을 향상시킵니다.</p>
@@ -253,13 +318,13 @@ function SettingsPageContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">정렬 기준</Label>
                   <p className="text-sm text-gray-500 mt-1">기프티콘 목록의 기본 정렬 방식을 설정합니다.</p>
                 </div>
                 <Select value={settings.sortBy} onValueChange={(value: SortBy) => updateSetting("sortBy", value)}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -270,7 +335,7 @@ function SettingsPageContent() {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">정렬 순서</Label>
                   <p className="text-sm text-gray-500 mt-1">오름차순 또는 내림차순으로 정렬할 수 있습니다.</p>
@@ -278,7 +343,7 @@ function SettingsPageContent() {
                 <RadioGroup
                   value={settings.sortOrder}
                   onValueChange={(value: SortOrder) => updateSetting("sortOrder", value)}
-                  className="flex space-x-4"
+                  className="flex flex-col gap-2 md:flex-row md:space-x-4 md:gap-0"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="asc" id="sort-asc" />
@@ -304,7 +369,7 @@ function SettingsPageContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">유효기간 임박 알림</Label>
                   <p className="text-sm text-gray-500 mt-1">기프티콘 만료일이 가까워지면 알림을 받을 수 있습니다.</p>
@@ -316,7 +381,7 @@ function SettingsPageContent() {
               </div>
 
               {settings.expiryNotification && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <Label className="text-base font-medium">알림 시점</Label>
                     <p className="text-sm text-gray-500 mt-1">만료일 전에 알림 받을 시점을 설정합니다.</p>
@@ -325,7 +390,7 @@ function SettingsPageContent() {
                     value={settings.expiryNotificationDays.toString()}
                     onValueChange={(value) => updateSetting("expiryNotificationDays", Number.parseInt(value))}
                   >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-full md:w-[120px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -350,7 +415,7 @@ function SettingsPageContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">AI 추천 기능</Label>
                   <p className="text-sm text-gray-500 mt-1">
@@ -365,7 +430,7 @@ function SettingsPageContent() {
 
               {settings.aiRecommendations && (
                 <>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <Label className="text-base font-medium">추천 빈도</Label>
                       <p className="text-sm text-gray-500 mt-1">AI 추천을 얼마나 자주 업데이트할지 설정합니다.</p>
@@ -376,7 +441,7 @@ function SettingsPageContent() {
                         updateSetting("aiRecommendationFrequency", value)
                       }
                     >
-                      <SelectTrigger className="w-[120px]">
+                      <SelectTrigger className="w-full md:w-[120px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -389,7 +454,7 @@ function SettingsPageContent() {
                     </Select>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <Label className="text-base font-medium">추천 배지 표시</Label>
                       <p className="text-sm text-gray-500 mt-1">추천된 기프티콘에 특별한 배지를 표시합니다.</p>
@@ -413,7 +478,7 @@ function SettingsPageContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between opacity-50">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between opacity-50">
                 <div>
                   <Label className="text-base font-medium">쿠폰 자동 인식 (갤러리)</Label>
                   <p className="text-sm text-gray-500 mt-1">갤러리에 저장된 기프티콘 이미지를 자동으로 인식합니다.</p>
@@ -426,7 +491,7 @@ function SettingsPageContent() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <Label className="text-base font-medium">이미지 업로드 시 자동 분석 (OCR)</Label>
                   <p className="text-sm text-gray-500 mt-1">업로드한 이미지에서 기프티콘 정보를 자동으로 추출합니다.</p>
@@ -446,7 +511,7 @@ function SettingsPageContent() {
               <CardTitle>데이터 내보내기</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
                 <div>
                   <p className="font-medium">백업/복원</p>
                   <p className="text-sm text-gray-500">데이터를 파일로 저장하거나 파일에서 복원합니다.</p>
@@ -502,7 +567,7 @@ function SettingsPageContent() {
               <CardTitle>기타 설정</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
                 <div>
                   <p className="font-medium">카테고리 설정</p>
                   <p className="text-sm text-gray-500">사용자 정의 카테고리 관리</p>
@@ -514,7 +579,7 @@ function SettingsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="font-medium">이모지 관리</p>
                   <p className="text-sm text-gray-500">기본 이모지 숨김/사용자 이모지 추가·삭제</p>

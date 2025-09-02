@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Barcode, Edit, MoreVertical, Eye, Trash2 } from "lucide-react"
+import { Barcode, Edit, MoreVertical, Eye, Trash2, Share2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +26,7 @@ interface GifticonListItemProps {
   isSelected?: boolean
   onSelect?: (id: string) => void
   disableExpiredToggle?: boolean
+  preferUsedStatus?: boolean
 }
 
 export function GifticonListItem({
@@ -38,12 +39,13 @@ export function GifticonListItem({
   isSelected = false,
   onSelect,
   disableExpiredToggle = false,
+  preferUsedStatus = false,
 }: GifticonListItemProps) {
   const [isBarcodeOpen, setIsBarcodeOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false)
 
-  const categoryInfo = categories[gifticon.category as keyof typeof categories] || categories.lifestyle
+  const categoryInfo = categories[gifticon.category] || categories.lifestyle
   const daysUntilExpiry = gifticon.expiryDate === "no-expiry" ? null : 
     Math.ceil((new Date(gifticon.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
   const isExpired = daysUntilExpiry !== null && daysUntilExpiry <= 0
@@ -56,6 +58,17 @@ export function GifticonListItem({
     if (onEdit) {
       onEdit(updatedGifticon)
     }
+  }
+
+  const handleShare = async () => {
+    const text = `${gifticon.brand} - ${gifticon.name}\n바코드: ${gifticon.barcode || "없음"}\n유효기간: ${gifticon.expiryDate || "없음"}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Giftee", text })
+      } else {
+        await navigator.clipboard.writeText(text)
+      }
+    } catch {}
   }
 
   return (
@@ -101,12 +114,7 @@ export function GifticonListItem({
             </Badge>
             <Badge 
               variant="outline" 
-              className="text-xs"
-              style={{ 
-                backgroundColor: categoryInfo.color + "20", 
-                borderColor: categoryInfo.color,
-                color: categoryInfo.color 
-              }}
+              className={`text-xs ${categoryInfo.bgColor} ${categoryInfo.color}`}
             >
               {categoryInfo.label}
             </Badge>
@@ -117,17 +125,16 @@ export function GifticonListItem({
           <p className="text-sm text-gray-600 truncate">
             {gifticon.brand}
           </p>
-          {daysUntilExpiry !== null && (
+          {(daysUntilExpiry !== null || (preferUsedStatus && gifticon.isUsed)) && (
             <div className="flex items-center space-x-2 text-sm mt-1">
-              <span className={`font-medium ${
-                daysUntilExpiry <= 7 ? "text-red-600" : 
-                daysUntilExpiry <= 30 ? "text-orange-600" : "text-gray-600"
-              }`}>
-                {daysUntilExpiry > 0 ? `D-${daysUntilExpiry}` : "만료됨"}
+              <span className={`font-medium ${preferUsedStatus && gifticon.isUsed
+                ? "text-green-600"
+                : (daysUntilExpiry! <= 7 ? "text-red-600" : daysUntilExpiry! <= 30 ? "text-orange-600" : "text-gray-600")}`}>
+                {preferUsedStatus && gifticon.isUsed ? "사용함" : (daysUntilExpiry! > 0 ? `D-${daysUntilExpiry}` : "만료됨")}
               </span>
-              <span className="text-gray-500">
-                {gifticon.expiryDate}
-              </span>
+              {gifticon.expiryDate && (
+                <span className="text-gray-500">{gifticon.expiryDate}</span>
+              )}
             </div>
           )}
         </div>
@@ -169,6 +176,10 @@ export function GifticonListItem({
               <DropdownMenuItem onClick={() => onView(gifticon)}>
                 <Eye className="h-4 w-4 mr-2" />
                 상세보기
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-2" />
+                공유
               </DropdownMenuItem>
               {onEdit && (
                 <DropdownMenuItem onClick={handleEdit}>

@@ -23,8 +23,8 @@ export const categories: Record<string, CategoryInfo> = {
   bakery: {
     label: "베이커리/도넛/떡",
     icon: Cake,
-    color: "text-pink-700",
-    bgColor: "bg-pink-50 border-pink-200",
+    color: "text-rose-700",
+    bgColor: "bg-rose-50 border-rose-200",
   },
   cafe: {
     label: "카페",
@@ -53,8 +53,8 @@ export const categories: Record<string, CategoryInfo> = {
   convenience: {
     label: "편의점",
     icon: Store,
-    color: "text-blue-700",
-    bgColor: "bg-blue-50 border-blue-200",
+    color: "text-sky-700",
+    bgColor: "bg-sky-50 border-sky-200",
   },
   asian: {
     label: "한식/중식/일식",
@@ -91,14 +91,14 @@ export const categories: Record<string, CategoryInfo> = {
   voucher: {
     label: "상품권/마트",
     icon: CreditCard,
-    color: "text-slate-700",
-    bgColor: "bg-slate-50 border-slate-200",
+    color: "text-neutral-700",
+    bgColor: "bg-neutral-50 border-neutral-200",
   },
   beauty: {
     label: "뷰티/패션/건강",
     icon: Sparkles,
-    color: "text-pink-700",
-    bgColor: "bg-pink-50 border-pink-200",
+    color: "text-fuchsia-700",
+    bgColor: "bg-fuchsia-50 border-fuchsia-200",
   },
   entertainment: {
     label: "영화/OTT/게임",
